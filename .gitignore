@@ -1,0 +1,13 @@
+# object files
+*.d
+*.o
+*.out
+*.html
+*.txt
+
+#ignore .txt in bin/
+microbench/bin/*.*
+nbr_experiments/data/*.*
+nbr_experiments/data_*
+nbr_experiments/plots/
+tools/data_framework/__pycache__/*.*
