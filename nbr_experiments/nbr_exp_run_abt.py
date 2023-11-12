@@ -175,22 +175,22 @@ def define_experiment(exp_dict, args):
     set_dir_data    ( exp_dict, os.getcwd() + '/data_abt' )               ## directory for data files
 
     add_run_param (exp_dict, 'DS_ALGOS', ['brown_ext_abtree_lf'])
-    add_run_param (exp_dict, 'RECLAIMER_ALGOS', ['nbr','nbrplus','debra', 'none','2geibr','qsbr', 'ibr_rcu','he','ibr_hp','wfe']) #['nbr','nbrplus','nbr_orig','debra', 'none','2geibr','qsbr', 'ibr_rcu','he','ibr_hp','wfe'] #['nbrplus', 'debra', 'none', 'ibr', 'qsbr', 'ibr_rcu', 'hazardptr']
-    add_run_param (exp_dict, '__trials', [1,2,3,4,5]) #[1,2,3]
+    add_run_param (exp_dict, 'RECLAIMER_ALGOS', ['nbr','nbrplus','debra','debra_df', 'token4', 'none','2geibr','qsbr', 'ibr_rcu','he','ibr_hp','wfe']) #['nbr','nbrplus','nbr_orig','debra', 'none','2geibr','qsbr', 'ibr_rcu','he','ibr_hp','wfe'] #['nbrplus', 'debra', 'none', 'ibr', 'qsbr', 'ibr_rcu', 'hazardptr']
+    add_run_param (exp_dict, '__trials', [1]) #[1,2,3]
     add_run_param     ( exp_dict, 'thread_pinning'  , ['-pin ' + shell_to_str('cd ' + get_dir_tools(exp_dict) + ' ; ./get_pinning_cluster.sh', exit_on_error=True)] )
-    add_run_param    (exp_dict, 'TOTAL_THREADS', [1,2,4,8,16,32,48,72,96,120,144,168,192,216,240,264,288,312,336,360,384]) #[1,2,4,8,16,32,48,72,96,120,144,168,192,216,240,264,512]
+    add_run_param    (exp_dict, 'TOTAL_THREADS', [24,48,72,96,120,144,168,192,240]) #[1,2,4,8,16,32,48,72,96,120,144,168,192,216,240,264,512]
     # add_run_param     ( exp_dict, 'TOTAL_THREADS'   , [1] + shell_to_listi('cd ' + get_dir_tools(exp_dict) + ' ; ./get_thread_counts_numa_nodes.sh', exit_on_error=True) )
-    add_run_param    (exp_dict, 'INS_DEL_HALF', [5,10,25,50])#[0,25,50]
-    add_run_param    (exp_dict, 'DS_SIZE', [200000, 2000000, 20000000]) #[200, 2000, 20000] [60000, 6000000]
+    add_run_param    (exp_dict, 'INS_DEL_HALF', [50])#[0,25,50]
+    add_run_param    (exp_dict, 'DS_SIZE', [20000000]) #[200, 2000, 20000] [60000, 6000000]
 
-    set_cmd_run      (exp_dict, 'LD_PRELOAD=../../lib/libjemalloc.so numactl --interleave=all time ./ubench_{DS_ALGOS}.alloc_new.reclaim_{RECLAIMER_ALGOS}.pool_none.out -nwork {TOTAL_THREADS} -nprefill {TOTAL_THREADS} -i {INS_DEL_HALF} -d {INS_DEL_HALF} -rq 0 -rqsize 1 -k {DS_SIZE} -t 5000 {thread_pinning}')
+    set_cmd_run      (exp_dict, 'LD_PRELOAD=../../lib/libjemalloc.so numactl --interleave=all time ./ubench_{DS_ALGOS}.alloc_new.reclaim_{RECLAIMER_ALGOS}.pool_none.out -nwork {TOTAL_THREADS} -nprefill {TOTAL_THREADS} -i {INS_DEL_HALF} -d {INS_DEL_HALF} -rq 0 -rqsize 1 -k {DS_SIZE} -t 5000') #removed thread pinning.
 
     add_data_field   (exp_dict, 'total_throughput', coltype='INTEGER')
     add_data_field   (exp_dict, 'maxresident_mb', coltype='REAL', extractor=get_maxres)
     add_plot_set(exp_dict, name='throughput-{DS_ALGOS}-u{INS_DEL_HALF}-sz{DS_SIZE}.png', series='RECLAIMER_ALGOS', title=''
           , x_axis='TOTAL_THREADS'
           , y_axis='total_throughput'
-          , plot_type=my_plot_func
+          , plot_type='line'
           , varying_cols_list=['INS_DEL_HALF','DS_SIZE']
           ,plot_cmd_args='--x_label threads --y_label throughput' )
 

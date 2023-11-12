@@ -101,9 +101,9 @@ minimal_%: dir_guard
 # DATA_STRUCTURES=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/hmlist/adapter.h))
 # DATA_STRUCTURES+=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/hm_hashtable/adapter.h))
 # DATA_STRUCTURES+=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/harris*/adapter.h))
-# DATA_STRUCTURES+=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/brown_ext_ab*/adapter.h))
+DATA_STRUCTURES=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/brown_ext_ab*/adapter.h))
 # DATA_STRUCTURES+=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/herlihy_lazy*/adapter.h))
-DATA_STRUCTURES=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/guerr*/adapter.h))
+# DATA_STRUCTURES=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/guerr*/adapter.h))
 POOLS=none
 ALLOCATORS=new
 

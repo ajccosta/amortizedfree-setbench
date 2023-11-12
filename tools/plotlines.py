@@ -92,6 +92,26 @@ for s, xy in series.items():
 
 ax = plt.gca()
 
+######################
+## change line labels. 
+# Customized by AJ for Amortized freing paper.
+######################
+lines = ax.get_lines()
+for line in lines:
+    if line.get_label() == 'token4':
+        line.set_label('token_af')
+    elif line.get_label() == 'debra_df':
+        line.set_label('debra_af')
+    elif line.get_label() == '2geibr':
+        line.set_label('ibr')
+    elif line.get_label() == 'ibr_rcu':
+        line.set_label('rcu')
+    elif line.get_label() == 'ibr_hp':
+        line.set_label('hp')
+    elif line.get_label() == 'nbrplus':
+        line.set_label('nbr+')
+    
+
 ax.grid(which='major', axis='y', linestyle='-', color='lightgray')
 
 ax.yaxis.set_minor_locator(ticker.AutoMinorLocator())
