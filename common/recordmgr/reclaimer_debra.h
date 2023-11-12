@@ -463,6 +463,11 @@ public:
             threadData[tid].deamortizedFreeables = NULL;
 #endif
         }
+        #ifdef DEAMORTIZE_FREE_CALLS
+        COUTATOMIC("type_algo : AF"<<std::endl);
+        #else
+        COUTATOMIC("type_algo : ORIG"<<std::endl);
+        #endif        
     }
     ~reclaimer_debra() {
 //        VERBOSE DEBUG std::cout<<"destructor reclaimer_debra"<<std::endl;

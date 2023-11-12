@@ -318,7 +318,12 @@ public:
         epoch.store(0, std::memory_order_release);
     #ifdef DEAMORTIZE_FREE_CALLS
         threadData[tid].deamortizedFreeables = NULL;
-    #endif                
+    #endif         
+    #ifdef DEAMORTIZE_FREE_CALLS
+    COUTATOMIC("type_algo : AF"<<std::endl);
+    #else
+    COUTATOMIC("type_algo : ORIG"<<std::endl);
+    #endif           
     }
     ~reclaimer_2geibr()
     {

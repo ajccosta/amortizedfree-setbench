@@ -6,8 +6,6 @@ import getopt
 import os
 import fileinput
 import argparse
-from palettable.cartocolors.qualitative import *  # Choose any qualitative color map you like
-
 
 ######################
 ## parse arguments
@@ -69,7 +67,7 @@ import pandas as pd
 import matplotlib.ticker as ticker
 from matplotlib.ticker import FuncFormatter
 from matplotlib import rcParams
-# mpl.rc('hatch', color='k', linewidth=1)
+mpl.rc('hatch', color='k', linewidth=1)
 
 if args.style_hooks != '':
     sys.path.append(os.path.dirname(args.style_hooks))
@@ -120,6 +118,38 @@ if data.isnull().values.any():
         data['x'] = x
         # print(data)
 
+def replace_value(value):
+    if value == 'debra_df':
+        return 'debra'
+    elif value == 'nbrplus_df':
+        return 'nbr+'
+    elif value == 'nbrplus':
+        return 'nbr+'
+
+    elif value == 'token1' or value == 'token4':
+        return 'token'
+    elif value == 'ibr_rcu_df' or value == 'ibr_rcu':
+        return 'rcu'
+    elif value == 'qsbr_df':
+        return 'qsbr'
+    elif value == 'ibr_hp_df' or value == 'ibr_hp':
+        return 'hp'
+    elif value == '2geibr_df' or value == '2geibr':
+        return 'ibr'
+
+    elif value == 'he_df':
+        return 'he'
+    elif value == 'nbr_df':
+        return 'nbr'
+    elif value == 'wfe_df':
+        return 'wfe'
+    else:
+        return value  # Keep the original value if no condition is met
+
+data['x'] = data['x'].apply(replace_value)
+
+with open('output.txt', 'a') as f:
+    f.write(data.to_string())
 # exit(0)
 ## should have well formed three column data at this point
 
@@ -135,11 +165,7 @@ tmax = pd.pivot_table(data, columns='series', index='x', values='y', aggfunc='ma
 # tmean = tmean.reindex(algs, axis=1)
 # tmin = tmin.reindex(algs, axis=1)
 # tmax = tmax.reindex(algs, axis=1)
-print(tmean.head())
-print(tmean.index)
-print(tmean.columns)
-print(list(tmean.columns))
-
+# print(tmean.head())
 
 ## compute error bars
 tpos_err = tmax - tmean
@@ -166,24 +192,23 @@ elif not len(err):
 plot_kwargs = dict(
       legend=False
     , title=args.title
-    , kind='line'
+    , kind='bar'
     , figsize=(args.width_inches, args.height_inches)
-    , xticks=list(tmean.index)
-    , markersize=7
-    # , edgecolor='black'
-    # , linewidth=1
-    # , zorder=10
-    # , logy=args.log_y
+    , width=0.75
+    , edgecolor='black'
+    , linewidth=1
+    , zorder=10
+    , logy=args.log_y
 )
 if args.stacked: plot_kwargs['stacked'] = True
 
 legend_kwargs = dict(
       title=None
-    , loc='center left'
-    , bbox_to_anchor=(1, 0.5)
-    , ncol=1
-    , labels=list(tmean.columns)
-    , fontsize=18
+    , loc='upper center'
+    , bbox_to_anchor=(0.2, 1)
+    , fancybox=True
+    , shadow=True
+    , ncol=args.legend_columns
 )
 
 fig, ax = plt.subplots()
@@ -193,44 +218,52 @@ if args.error_bar_width == 0:
     chart = tmean.plot(fig=fig, ax=ax, **plot_kwargs)
 else:
     plot_kwargs['yerr'] = err
+    plot_kwargs['error_kw'] = dict(elinewidth=args.error_bar_width, ecolor='red')
+    # orig_cols = [col for col in tmean.columns]
+    # tmean.columns = ["_" + col for col in tmean.columns]
+    # chart = tmean.plot(ax=ax, legend=False, title=args.title, kind='bar', yerr=err, error_kw=dict(elinewidth=args.error_bar_width+4, ecolor='black',capthick=2,capsize=(args.error_bar_width+2)/2), figsize=(args.width_inches, args.height_inches), width=0.75, edgecolor='black', linewidth=3, zorder=10, logy=args.log_y)
+    # ## replot error bars for a stylistic effect, but MUST prefix columns with "_" to prevent duplicate legend entries
+    # tmean.columns = orig_cols
     chart = tmean.plot(fig=fig, ax=ax, **plot_kwargs)
 
 chart.grid(axis='y', zorder=0)
 
 ax = plt.gca()
+# ax.set_ylim(0, ylim)
 
-# Choose a qualitative color map from palettable.cartocolors.qualitative
-color_map = Safe_10.mpl_colors
-color_map1 = Vivid_2.mpl_colors
-lines = ax.get_lines()
-patterns =('.', 'o', 'v', '^', '<', '>', '8', 's', 'p', '*', 'D', 'H', 'X', 'd', 'P', 'h')
-# ('o', 'v', '^', 's', 'p', 'P', '*', 'D', 'x', 'd', '+', '1' )
-labels=list(tmean.columns)
+# ax.yaxis.get_offset_text().set_y(-100)
+# ax.yaxis.set_offset_position("left")
 
-j = 0
-for i, (line, marker, label) in enumerate(zip(lines, patterns, labels)):
-    line.set_marker(marker)
-    line.set_label(label)
-    if label == "token_af":
-        line.set_linewidth(3)
-        line.set_color(color_map1[0])
-    elif label == "token1":
-        line.set_linewidth(3)
-        line.set_color(color_map1[1])
-    elif label == "none":
-        line.set_linestyle('--')
-    else:
-        line.set_color(color_map[j])
-        j+=1
+# i=0
+# for c in tmean:
+#     # print("c in tmean={}".format(c))
+#     # print("tmean[c]=")
+#     df=tmean[c]
+#     # print(df)
+#     # print("trying to extract column:")
+#     # print("tmean[{}]={}".format(c, tmean[c]))
+#     xvals=[x for x in df.index]
+#     yvals=[y for y in df]
+#     errvals=[[e for e in err[i][0]], [e for e in err[i][1]]]
+#     print("xvals={} yvals={} errvals={}".format(xvals, yvals, errvals))
+#     ax.errorbar(xvals, yvals, yerr=errvals, linewidth=args.error_bar_width, color='red', zorder=20)
+#     i=i+1
 
-    
+chart.set_xticklabels(chart.get_xticklabels(), ha="center", rotation=0)
+
+bars = ax.patches
+# patterns =( 'x', '/', '//', 'O', 'o', '\\', '\\\\', '-', '+', ' ' )
+patterns =( 'O', '-', '//', 'O', 'o', '\\', '\\\\', '-', '+', ' ' )
+hatches = [p for p in patterns for i in range(len(tmean))]
+for bar, hatch in zip(bars, hatches):
+    bar.set_hatch(hatch)
+
 
 ## maybe remove y grid
 
 # print("args.no_y_grid={} args.no_y_minor_grid={}".format(args.no_y_grid, args.no_y_minor_grid))
 if not args.no_y_grid:
     plt.grid(axis='y', which='major', linestyle='-')
-    plt.grid(axis='x', which='major', linestyle='--')
     if not args.no_y_minor_grid:
         plt.grid(axis='y', which='minor', linestyle='--')
 
@@ -269,8 +302,6 @@ else:
 
 if args.legend_include:
     plt.legend(**legend_kwargs)
-    plt.axvline(x=192, color='red', linestyle='--', label='max_hw_threads')
-
 
 if not args.legend_only:
     if args.style_hooks != '': mod_style_hooks.style_after_plotting(mpl)

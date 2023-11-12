@@ -439,7 +439,13 @@ public:
 		epoch.ui.store(1, std::memory_order_release); // use 0 as infinity
     #ifdef DEAMORTIZE_FREE_CALLS
         threadData[tid].deamortizedFreeables = NULL;
-    #endif		
+    #endif
+	#ifdef DEAMORTIZE_FREE_CALLS
+	COUTATOMIC("type_algo : AF"<<std::endl);
+	#else
+	COUTATOMIC("type_algo : ORIG"<<std::endl);
+	#endif        
+		
     }
     ~reclaimer_wfe()
     {

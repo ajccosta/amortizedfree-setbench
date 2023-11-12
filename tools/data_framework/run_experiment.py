@@ -956,7 +956,7 @@ def get_plot_tool_path(plot_set):
     ## and do a quick check to see if it's legal to use it with the given options
     ptype = plot_set['plot_type'].lower()
     if ptype == 'bars':
-        plot_tool_path = 'plotbars.py' if series else 'plotbar.py'
+        plot_tool_path = 'plotbars_aj.py' if series else 'plotbar.py'
     elif ptype == 'line':
         plot_tool_path = 'plotlines.py' if series else 'plotline.py'
     elif ptype == 'hist2d':

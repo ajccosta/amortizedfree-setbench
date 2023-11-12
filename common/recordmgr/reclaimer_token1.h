@@ -441,6 +441,7 @@ public:
             threadData[tid].deamortizedFreeables = NULL;
 #endif
         }
+        COUTATOMIC("type_algo : ORIG"<<std::endl);
     }
     ~reclaimer_token1() {
 //        VERBOSE DEBUG std::cout<<"destructor reclaimer_token1"<<std::endl;

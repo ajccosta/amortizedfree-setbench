@@ -525,6 +525,11 @@ else
             COUTATOMIC("give a valid value for MAX_RETIREBAG_CAPACITY_POW2!" << std::endl);
             exit(-1);
         }
+        #ifdef DEAMORTIZE_FREE_CALLS
+        COUTATOMIC("type_algo : AF"<<std::endl);
+        #else
+        COUTATOMIC("type_algo : ORIG"<<std::endl);
+        #endif
     }
 
     ~reclaimer_nbr()
