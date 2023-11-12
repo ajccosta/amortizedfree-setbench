@@ -1,10 +1,16 @@
-repo with amortized free versions extended from nbr_setbench_plus.
+This repo contains the code and experiment setup used to evaluate the amortized freeing and token EBR algorithm presented in PPOPP23 paper titled: "Are Your Epochs Too Epic? Batch Free Can Be Harmful".
+
+#to reproduce exp1 and exp2:
+1. switch to af_experiments/
+2. ./run_exp1.sh for exp1 and ./run_exp2.sh for exp2.
+3. To change experiment parameters like workload, data structure, change in exp1_run_tree.py or exp2_run_tree.py
+4. After experiments completes plots will be generated inside plots/
+
+#CREDITS:
+This repo builds upon the  nbr_setbench_plus project used for neutralization based reclamation techniques, which in turn used the original [setbench](https://gitlab.com/trbot86/setbench) of [Multicore Lab](https://mc.uwaterloo.ca/) headed by Prof. Trevor Brown to test and evaluate lockfree data structures and reclamation algorithms.
 
 
-
-CREDITS:
-This microbenchmark uses the original [setbench](https://gitlab.com/trbot86/setbench) of [Multicore Lab](https://mc.uwaterloo.ca/) headed by Prof. Trevor Brown to test and evaluate reclamation algorithms.
-This repo was originally created for evaluating neutralization based reclamation. Since then I have evolved it do more reclamation work and now the currect shape of this repo is that it contains alortized freeing version.
+###TODO: Daewoo and I gonna use following style of readme for ppopp23 AE.
 
 ## 🏁 Getting Started
 
