@@ -53,8 +53,8 @@ for line in args.infile:
         series[s] = ([], [])
 
     ## append data point to series
-    series[s][0].append(int(tokens[1]))
-    series[s][1].append(int(tokens[2]))
+    series[s][0].append(float(tokens[1]))
+    series[s][1].append(float(tokens[2]))
 
 ######################
 ## setup matplotlib

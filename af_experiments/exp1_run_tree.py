@@ -5,7 +5,7 @@
 # INS_DEL_HALF
 #  DS_SIZE
 
-###this script runs compiles, runs and then produces nice figures using Setbenches tool framework for ht
+###this script runs compiles, runs and then produces nice figures using Setbenches tool framework.
 
 import sys 
 sys.path.append('../tools/data_framework')
@@ -19,82 +19,25 @@ import matplotlib as mpl
 def get_maxres(exp_dict, file_name, field_name):
     ## manually parse the maximum resident size from the output of `time` and add it to the data file
     maxres_kb_str = shell_to_str('grep "maxres" {} | cut -d" " -f6 | cut -d"m" -f1'.format(file_name))
-    return float(maxres_kb_str) / 1000
+    res = int(float(maxres_kb_str) / 1000)
+    print(res)
+    return res
 
-def my_memplot_func(filename, column_filters, data, series_name, x_name, y_name, title, exp_dict=None):
-    plt.rcParams['font.size'] = '12'   
-    # print(data.head(20))
-    data=data.groupby(['RECLAIMER_ALGOS', 'TOTAL_THREADS'])['maxresident_mb'].mean().reset_index()
-    table = pandas.pivot_table(data, index=x_name, columns=series_name, values=y_name, aggfunc='mean')
-    
-    # ax = table.plot(kind='line', title=filename.rsplit('/',1)[1])
-    ax = table.plot(kind='line', legend=None)
+# run param = DS_ALGOS. values={brown_ext_abtree_lf, guerraoui_ext_bst_ticket}
 
-    ax.set_xlabel("num threads")
-    ax.set_ylabel("maxresident_mb")
+# run param = RECLAIMER_ALGOS. values=['nbr','nbrplus','debra','debra_df', 'token4', 'none','2geibr','qsbr', 'ibr_rcu','he','ibr_hp','wfe']
+# token4 is code name of token based ebr with amortizing enabled.
+# token1 is naive token based ebr algorithm.
+# 2geibr is ibr algorithm
+# algos with _df suffix are amortized freeing versions of original algorithms. For eg. debra_df is the amortized freeing version of debra.
 
-    for i, line in enumerate(ax.get_lines()):
-        # print(line.get_label())
+# run param = __trials. Number of trails eac experiment needs to be averaged over.
+# run param = TOTAL_THREADS. values = [24,48,72,96,120,144,168,192,240]
 
-        if line.get_label() == "2geibr":
-            line.set_ls("dotted")
-            line.set_marker("o")
-            line.set_color("crimson")
-        if line.get_label() == "crystallineL":
-            line.set_label("crystL")
-            line.set_marker("+")
-            line.set_ls("dotted")
-            line.set_color("magenta")
+# run param = INS_DEL_HALF. values = [25, 50].
+# For eg 50 mins 50%inserts and 50% deletes. 25 means 25% inserts and 25% deletes and rest is contains.
 
-        if line.get_label() == "crystallineW":
-            line.set_label("crystW")
-            line.set_marker("x")
-            line.set_ls("dotted")
-            line.set_color("indigo")
-        if line.get_label() == "debra":
-            line.set_marker("*")
-            line.set_color("blue")
-
-        if line.get_label() == "he":
-            line.set_marker(".")
-            line.set_color("dodgerblue")
-        if line.get_label() == "ibr_hp":
-            line.set_label("hp")
-            line.set_marker("|")
-            line.set_color("teal")
-
-        if line.get_label() == "ibr_rcu":
-            line.set_label("rcu")
-            line.set_marker("h")
-            line.set_color("lightseagreen")
-
-        if line.get_label() == "nbr":
-            line.set_marker("D")
-            line.set_color("dimgray")                
-        if line.get_label() == "nbrplus":
-            line.set_label("nbr+")
-            line.set_marker("^")                
-            line.set_color("darkgreen")                
-        if line.get_label() == "none":
-            line.set_ls("dashed")                                
-            line.set_color("black")
-        if line.get_label() == "qsbr":
-            line.set_marker("p")
-            line.set_color("brown")
-        if line.get_label() == "wfe":
-            line.set_marker("1")
-            line.set_color("sienna")
-
-    # figlegend = plt.figure(figsize=(3,2))
-    patches, labels = ax.get_legend_handles_labels()
-
-    ax.legend(loc='center left', bbox_to_anchor=(1.0, 0.5), fancybox=True, shadow=True)
-
-    plt.grid()
-    mpl.pyplot.savefig(filename, bbox_inches="tight")
-    print('## SAVED FIGURE {}'.format(filename))    
-
-
+# run param = DS_SIZE. values [200, 2000, 20000]
 def define_experiment(exp_dict, args):
     set_dir_tools    (exp_dict, os.getcwd() + '/../tools') ## tools library for plotting
     set_dir_compile  (exp_dict, os.getcwd() + '/../microbench')     ## working dir for compiling
@@ -103,16 +46,18 @@ def define_experiment(exp_dict, args):
     set_dir_data    ( exp_dict, os.getcwd() + '/data_exp1' )               ## directory for data files
 
     add_run_param (exp_dict, 'DS_ALGOS', ['brown_ext_abtree_lf'])
-    add_run_param (exp_dict, 'RECLAIMER_ALGOS', ['nbr','nbrplus','debra','debra_df', 'token4', 'none','2geibr','qsbr', 'ibr_rcu','he','ibr_hp','wfe']) #['nbr','nbrplus','nbr_orig','debra', 'none','2geibr','qsbr', 'ibr_rcu','he','ibr_hp','wfe'] #['nbrplus', 'debra', 'none', 'ibr', 'qsbr', 'ibr_rcu', 'hazardptr']
-    add_run_param (exp_dict, '__trials', [1]) #[1,2,3]
+    add_run_param (exp_dict, 'RECLAIMER_ALGOS', ['nbr','nbrplus','debra','debra_df', 'token4', 'none','2geibr','qsbr', 'ibr_rcu','he','ibr_hp','wfe']) 
+    # ['nbr','nbrplus','debra','debra_df', 'token4', 'none','2geibr','qsbr', 'ibr_rcu','he','ibr_hp','wfe']
+ 
+    add_run_param (exp_dict, '__trials', [1,2,3]) #[1,2,3]
     add_run_param     ( exp_dict, 'thread_pinning'  , ['-pin ' + shell_to_str('cd ' + get_dir_tools(exp_dict) + ' ; ./get_pinning_cluster.sh', exit_on_error=True)] )
-    add_run_param    (exp_dict, 'TOTAL_THREADS', [24,48,72,96,120,144,168,192]) 
-    #[24,48,72,96,120,144,168,192,240] [1,2,4,8,16,32,48,72,96,120,144,168,192,216,240,264,512]
+    add_run_param    (exp_dict, 'TOTAL_THREADS', [24,48,72,96,120,144,168,192,240]) 
+    # [1,2,4,8,16,32,48,72,96,120,144,168,192,216,240,264,512]
     # add_run_param     ( exp_dict, 'TOTAL_THREADS'   , [1] + shell_to_listi('cd ' + get_dir_tools(exp_dict) + ' ; ./get_thread_counts_numa_nodes.sh', exit_on_error=True) )
     add_run_param    (exp_dict, 'INS_DEL_HALF', [50])#[0,25,50]
     add_run_param    (exp_dict, 'DS_SIZE', [20000000]) #[200, 2000, 20000] [60000, 6000000]
 
-    set_cmd_run      (exp_dict, 'LD_PRELOAD=../../lib/libjemalloc.so numactl --interleave=all time ./ubench_{DS_ALGOS}.alloc_new.reclaim_{RECLAIMER_ALGOS}.pool_none.out -nwork {TOTAL_THREADS} -nprefill {TOTAL_THREADS} -i {INS_DEL_HALF} -d {INS_DEL_HALF} -rq 0 -rqsize 1 -k {DS_SIZE} -t 2000') #removed thread pinning.
+    set_cmd_run      (exp_dict, 'LD_PRELOAD=../../lib/libjemalloc.so numactl --interleave=all time ./ubench_{DS_ALGOS}.alloc_new.reclaim_{RECLAIMER_ALGOS}.pool_none.out -nwork {TOTAL_THREADS} -nprefill {TOTAL_THREADS} -i {INS_DEL_HALF} -d {INS_DEL_HALF} -rq 0 -rqsize 1 -k {DS_SIZE} -t 5000') #removed thread pinning.
 
     add_data_field   (exp_dict, 'total_throughput', coltype='INTEGER')
     add_data_field   (exp_dict, 'maxresident_mb', coltype='REAL', extractor=get_maxres)
@@ -120,21 +65,12 @@ def define_experiment(exp_dict, args):
           , x_axis='TOTAL_THREADS'
           , y_axis='total_throughput'
           , plot_type='line'
-          , varying_cols_list=['INS_DEL_HALF','DS_SIZE']
-          ,plot_cmd_args='--x_label threads --y_label throughput' )
+        #   , varying_cols_list=['INS_DEL_HALF','DS_SIZE']
+          ,plot_cmd_args='--x_label threads --y_label "throughput(ops/sec)"' )
 
-    add_plot_set(
-            exp_dict
-          , name='maxresident-{DS_ALGOS}-u{INS_DEL_HALF}-k{DS_SIZE}.png'
-          , series='RECLAIMER_ALGOS'
-          , title='Max resident size (MB)'
-        #   , filter=filter_string
-          , varying_cols_list=['INS_DEL_HALF','DS_SIZE']
+    add_plot_set(exp_dict, name='maxresident-{DS_ALGOS}-u{INS_DEL_HALF}-sz{DS_SIZE}.png', series='RECLAIMER_ALGOS', title=''
           , x_axis='TOTAL_THREADS'
           , y_axis='maxresident_mb'
-          , plot_type=my_memplot_func
-          , plot_cmd_args='--x_label threads --y_label throughput'
-    )
-
-# import sys ; sys.path.append('../tools/data_framework') ; from run_experiment import *
-# run_in_jupyter(define_experiment_dgt, cmdline_args='-dp')
+          , plot_type='line'
+          , plot_cmd_args='--x_label threads --y_label "maxresident(mb)"' )
+    

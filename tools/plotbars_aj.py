@@ -79,7 +79,7 @@ if args.style_hooks != '':
 else:
     rcParams.update({'figure.autolayout': True})
     rcParams.update({'font.size': args.font_size})
-    # plt.style.use('dark_background')
+    plt.style.use('dark_background')
     plt.rcParams["figure.dpi"] = args.dots_per_inch
 
 

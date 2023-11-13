@@ -5,7 +5,7 @@
 # INS_DEL_HALF
 #  DS_SIZE
 
-###this script runs compiles, runs and then produces nice figures using Setbenches tool framework for ht
+###this script runs compiles, runs and then produces nice figures using Setbenches tool framework.
 
 import sys 
 sys.path.append('../tools/data_framework')
@@ -28,153 +28,6 @@ def get_algotype(exp_dict, file_name, field_name):
 
     return maxres_kb_str
 
-def my_plot_func(filename, column_filters, data, series_name, x_name, y_name, title, exp_dict=None):
-    plt.rcParams['font.size'] = '12'
-    
-    print(data.head(20))
-    print(list(data))
-    # data=data.groupby(['RECLAIMER_ALGOS', 'TOTAL_THREADS'])['total_throughput'].mean().reset_index()
-    # table = pandas.pivot_table(data, index=x_name, columns=series_name, values=y_name, aggfunc='mean')
-    
-    # # ax = table.plot(kind='line', title=title+' '+filename.rsplit('/',1)[1])
-    # ax = table.plot(kind='line', legend=None)
-
-    # ax.set_xlabel("num threads")
-    # ax.set_ylabel("throughput")
-
-    # for i, line in enumerate(ax.get_lines()):
-    #     # print(line.get_label())
-
-    #     if line.get_label() == "2geibr":
-    #         line.set_ls("dotted")
-    #         line.set_marker("o")
-    #         line.set_color("crimson")
-    #     if line.get_label() == "crystallineL":
-    #         line.set_label("crystL")
-    #         line.set_marker("+")
-    #         line.set_ls("dotted")
-    #         line.set_color("magenta")
-
-    #     if line.get_label() == "crystallineW":
-    #         line.set_label("crystW")
-    #         line.set_marker("x")
-    #         line.set_ls("dotted")
-    #         line.set_color("indigo")
-    #     if line.get_label() == "debra":
-    #         line.set_marker("*")
-    #         line.set_color("blue")
-
-    #     if line.get_label() == "he":
-    #         line.set_marker(".")
-    #         line.set_color("dodgerblue")
-    #     if line.get_label() == "ibr_hp":
-    #         line.set_label("hp")
-    #         line.set_marker("|")
-    #         line.set_color("teal")
-
-    #     if line.get_label() == "ibr_rcu":
-    #         line.set_label("rcu")
-    #         line.set_marker("h")
-    #         line.set_color("lightseagreen")
-
-    #     if line.get_label() == "nbr":
-    #         line.set_marker("D")
-    #         line.set_color("dimgray")                
-    #     if line.get_label() == "nbrplus":
-    #         line.set_label("nbr+")
-    #         line.set_marker("^")                
-    #         line.set_color("darkgreen")                
-    #     if line.get_label() == "none":
-    #         line.set_ls("dashed")                                
-    #         line.set_color("black")
-    #     if line.get_label() == "qsbr":
-    #         line.set_marker("p")
-    #         line.set_color("brown")
-    #     if line.get_label() == "wfe":
-    #         line.set_marker("1")
-    #         line.set_color("sienna")
-
-    # # figlegend = plt.figure(figsize=(3,2))
-    # patches, labels = ax.get_legend_handles_labels()
-
-    # ax.legend(loc='center left', bbox_to_anchor=(1.0, 0.5), fancybox=True, shadow=True)
-    # plt.grid()
-    # mpl.pyplot.savefig(filename, bbox_inches="tight")
-    # print('## SAVED FIGURE {}'.format(filename))    
-
-def my_memplot_func(filename, column_filters, data, series_name, x_name, y_name, title, exp_dict=None):
-    plt.rcParams['font.size'] = '12'   
-    print(data.head(20))
-    data=data.groupby(['RECLAIMER_ALGOS', 'TOTAL_THREADS'])['maxresident_mb'].mean().reset_index()
-    table = pandas.pivot_table(data, index=x_name, columns=series_name, values=y_name, aggfunc='mean')
-    
-    # ax = table.plot(kind='line', title=filename.rsplit('/',1)[1])
-    ax = table.plot(kind='line', legend=None)
-
-    ax.set_xlabel("num threads")
-    ax.set_ylabel("maxresident_mb")
-
-    for i, line in enumerate(ax.get_lines()):
-        # print(line.get_label())
-
-        if line.get_label() == "2geibr":
-            line.set_ls("dotted")
-            line.set_marker("o")
-            line.set_color("crimson")
-        if line.get_label() == "crystallineL":
-            line.set_label("crystL")
-            line.set_marker("+")
-            line.set_ls("dotted")
-            line.set_color("magenta")
-
-        if line.get_label() == "crystallineW":
-            line.set_label("crystW")
-            line.set_marker("x")
-            line.set_ls("dotted")
-            line.set_color("indigo")
-        if line.get_label() == "debra":
-            line.set_marker("*")
-            line.set_color("blue")
-
-        if line.get_label() == "he":
-            line.set_marker(".")
-            line.set_color("dodgerblue")
-        if line.get_label() == "ibr_hp":
-            line.set_label("hp")
-            line.set_marker("|")
-            line.set_color("teal")
-
-        if line.get_label() == "ibr_rcu":
-            line.set_label("rcu")
-            line.set_marker("h")
-            line.set_color("lightseagreen")
-
-        if line.get_label() == "nbr":
-            line.set_marker("D")
-            line.set_color("dimgray")                
-        if line.get_label() == "nbrplus":
-            line.set_label("nbr+")
-            line.set_marker("^")                
-            line.set_color("darkgreen")                
-        if line.get_label() == "none":
-            line.set_ls("dashed")                                
-            line.set_color("black")
-        if line.get_label() == "qsbr":
-            line.set_marker("p")
-            line.set_color("brown")
-        if line.get_label() == "wfe":
-            line.set_marker("1")
-            line.set_color("sienna")
-
-    # figlegend = plt.figure(figsize=(3,2))
-    patches, labels = ax.get_legend_handles_labels()
-
-    ax.legend(loc='center left', bbox_to_anchor=(1.0, 0.5), fancybox=True, shadow=True)
-
-    plt.grid()
-    mpl.pyplot.savefig(filename, bbox_inches="tight")
-    print('## SAVED FIGURE {}'.format(filename))    
-
 
 def define_experiment(exp_dict, args):
     set_dir_tools    (exp_dict, os.getcwd() + '/../tools') ## tools library for plotting
@@ -185,8 +38,9 @@ def define_experiment(exp_dict, args):
 
     add_run_param (exp_dict, 'DS_ALGOS', ['brown_ext_abtree_lf'])
     add_run_param (exp_dict, 'RECLAIMER_ALGOS', ['debra', 'debra_df', 'nbrplus', 'nbrplus_df', 'nbr', 'nbr_df', 'ibr_rcu', 'ibr_rcu_df', 'qsbr', 'qsbr_df', '2geibr', '2geibr_df', 'ibr_hp', 'ibr_hp_df', 'he', 'he_df', 'wfe', 'wfe_df', 'token1', 'token4'])
-     # ['debra', 'debra_df', 'nbrplus', 'nbrplus_df', 'nbr', 'nbr_df', 'ibr_rcu', 'ibr_rcu_df', 'qsbr', 'qsbr_df', '2geibr', '2geibr_df', 'ibr_hp', 'ibr_hp_df', 'he', 'he_df', 'wfe', 'wfe_df'] ['nbr','nbrplus','nbr_orig','debra', 'none','2geibr','qsbr', 'ibr_rcu','he','ibr_hp','wfe'] #['nbrplus', 'debra', 'none', 'ibr', 'qsbr', 'ibr_rcu', 'hazardptr']
-    add_run_param (exp_dict, '__trials', [1]) #[1,2,3]
+    # ['debra', 'debra_df', 'nbrplus', 'nbrplus_df', 'nbr', 'nbr_df', 'token1', 'token4']
+
+    add_run_param (exp_dict, '__trials', [1,2,3]) #[1,2,3]
     add_run_param     ( exp_dict, 'thread_pinning'  , ['-pin ' + shell_to_str('cd ' + get_dir_tools(exp_dict) + ' ; ./get_pinning_cluster.sh', exit_on_error=True)] )
     add_run_param    (exp_dict, 'TOTAL_THREADS', [192]) #[1,2,4,8,16,32,48,72,96,120,144,168,192,216,240,264,512]
     # add_run_param     ( exp_dict, 'TOTAL_THREADS'   , [1] + shell_to_listi('cd ' + get_dir_tools(exp_dict) + ' ; ./get_thread_counts_numa_nodes.sh', exit_on_error=True) )
@@ -198,9 +52,14 @@ def define_experiment(exp_dict, args):
     add_data_field   (exp_dict, 'total_throughput', coltype='INTEGER')
     add_data_field   (exp_dict, 'type_algo', coltype='TEXT', extractor=get_algotype)
     add_data_field   (exp_dict, 'maxresident_mb', coltype='REAL', extractor=get_maxres)
-    add_plot_set(exp_dict, name='throughput-{DS_ALGOS}-u{INS_DEL_HALF}-sz{DS_SIZE}.png', series='type_algo', title='Original vs AF implementations'
+    add_plot_set(exp_dict, name='throughput-{DS_ALGOS}-u{INS_DEL_HALF}-sz{DS_SIZE}.png', series='type_algo', title='Throughput Original vs AF implementations'
           , x_axis='RECLAIMER_ALGOS'
           , y_axis='total_throughput'
           , plot_type='bars'
-        #   , varying_cols_list=['INS_DEL_HALF','DS_SIZE']
-          ,plot_cmd_args='--legend-include' )
+          ,plot_cmd_args='--legend-include --x-title "Reclaimer" --y-title "Throughput (ops/sec)"' )
+    
+    add_plot_set(exp_dict, name='memusage-{DS_ALGOS}-u{INS_DEL_HALF}-sz{DS_SIZE}.png', series='type_algo', title='MemUsage Original vs AF implementations'
+          , x_axis='RECLAIMER_ALGOS'
+          , y_axis='maxresident_mb'
+          , plot_type='bars'
+          ,plot_cmd_args='--legend-include --x-title "Reclaimer" --y-title "Memory Usage (MB)"' )
