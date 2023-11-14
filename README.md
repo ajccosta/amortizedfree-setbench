@@ -297,10 +297,10 @@ verify installation:
 ## Misc:
 
 ### Build Docker image
-``` sudo docker build -t nbr_setbench . ```
+``` sudo docker build -t amortizedfree-setbench . ```
 
 ### Save docker image
-``` sudo docker save nbr_setbench:latest | gzip > nbr_docker.tar.gz ```
+``` sudo docker save amortizedfree-setbench:latest | gzip > amortizedfree_docker.tar.gz ```
 
 ### erase all docker containers in the system
 ``` docker system prune -a ```
