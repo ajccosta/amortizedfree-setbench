@@ -29,7 +29,7 @@ RUN pip3 install \
         jinja2 \
         colorama
 
-COPY . /nbr_setbench/
-WORKDIR /nbr_setbench/
+COPY . /amortizedfree-setbench/
+WORKDIR /amortizedfree-setbench/
 
 CMD bash -C 'myscript.sh';'bash'
