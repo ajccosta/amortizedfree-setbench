@@ -72,15 +72,21 @@ def define_experiment(exp_dict, args):
     dssize = [int(i) for i in dssize]
     fsz.close() 
 
+    fn = open("inputs/dsname.txt", "r")
+    dsname=fn.readline().rstrip('\n') #remove new line
+    dsname=dsname.split(',') # split
+    dsname = [i.strip() for i in dsname] #remove white space
+    fn.close() 
 
     print("INPUTS:")
     print ("reclaimers=", reclaimers) 
     print("thread_list=", thread_list)
     print("workloadtype=", worktype)
     print("steps=", steps)
-    print("DGT size=", dssize)
+    print("DS size=", dssize)
+    print("DS name=", dsname)
 
-    add_run_param (exp_dict, 'DS_ALGOS', ['brown_ext_abtree_lf', 'guerraoui_ext_bst_ticket'])
+    add_run_param (exp_dict, 'DS_ALGOS', dsname)
     add_run_param (exp_dict, 'RECLAIMER_ALGOS', reclaimers)
     # ['debra', 'debra_df', 'nbrplus', 'nbrplus_df', 'nbr', 'nbr_df', 'ibr_rcu', 'ibr_rcu_df', 'qsbr', 'qsbr_df', '2geibr', '2geibr_df', 'ibr_hp', 'ibr_hp_df', 'he', 'he_df', 'wfe', 'wfe_df', 'token1', 'token4']
     # ['debra', 'debra_df', 'nbrplus', 'nbrplus_df', 'nbr', 'nbr_df', 'token1', 'token4']

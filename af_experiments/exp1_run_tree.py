@@ -81,15 +81,21 @@ def define_experiment(exp_dict, args):
     dssize = [int(i) for i in dssize]
     fsz.close() 
 
+    fn = open("inputs/dsname.txt", "r")
+    dsname=fn.readline().rstrip('\n') #remove new line
+    dsname=dsname.split(',') # split
+    dsname = [i.strip() for i in dsname] #remove white space
+    fn.close() 
 
     print("INPUTS:")
     print ("reclaimers=", reclaimers) 
     print("thread_list=", thread_list)
     print("workloadtype=", worktype)
     print("steps=", steps)
-    print("DGT size=", dssize)
+    print("DS size=", dssize)
+    print("DS name=", dsname)
 
-    add_run_param (exp_dict, 'DS_ALGOS', ['brown_ext_abtree_lf', 'guerraoui_ext_bst_ticket'])
+    add_run_param (exp_dict, 'DS_ALGOS', dsname)
     add_run_param (exp_dict, 'RECLAIMER_ALGOS', reclaimers) 
     # ['nbr','nbrplus','debra','debra_df', 'token4', 'none','2geibr','qsbr', 'ibr_rcu','he','ibr_hp','wfe']
  
