@@ -174,7 +174,7 @@ Now change the appropriate '.txt' file using micro text editor (or editor of you
 save your changes and repeat this process for other input files listed above.
 
 Next, repeat the following steps as done in the Quick test.
-### Evaluate throughput:
+### Evaluate exp1:  ??? content will changes??? 
 
 * *step1*. Assuming you are currently in nbr_setbench, execute the following command:
 
@@ -194,7 +194,7 @@ Next, repeat the following steps as done in the Quick test.
 
 Note: as long as the amortizedfree-setbench is run on a 144 thread machine with 4 NUMA nodes the generated plots should match the expected plots.
 
-### Evaluate memory usage: 
+### Evaluate exp2: 
 
 * *step1*. Assuming you are currently in amortizedfree-setbench, execute the following command:
 
@@ -238,7 +238,7 @@ run_exp1.sh/run_exp2.sh will do the following:
 5. Produce figures in directory amortizedfree-setbench/af_experiments/plots/generated_plots.
 
 
-## 🚀 Types of machines we evaluated NBR-setnbench on:
+## 🚀 Types of machines we evaluated NBR-setnbench on: [??????to be updated]
 
 * Smallest NUMA machine we have tested NBR has following configuration:
   * Architecture        : Intel x86_64
@@ -255,7 +255,7 @@ run_exp1.sh/run_exp2.sh will do the following:
   * Core(s) per socket  : 24
   * Memory              : 377G
 
-## 🎉 Claims from the paper supported by the artifact:
+## 🎉 Claims from the paper supported by the artifact: [???? To be updated????????]
 - *claim 1*. NBR+ is faster than other reclamation algorithms considered in the paper.
   - please check throughput plots in nbr_setbench/nbr_experiments/plots/generated_plots.
   - On our 144 CPUs and 4 sockets machine with 188G memory NBR+ has better throughput after 72 threads than other reclamation algorithms. 

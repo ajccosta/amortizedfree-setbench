@@ -51,11 +51,21 @@ else
     FLAGS += -O3
 endif
 
+debug_timeline_record_every_deamortized_free=0
+ifeq ($(debug_timeline_record_every_deamortized_free), 1)
+	FLAGS += -DTIMELINE_RECORD_EVERY_DEAMORTIZED_FREE
+endif
+
+debra_orig_free=1
+ifeq ($(debra_orig_free), 1)
+	FLAGS += -DDEBRA_ORIGINAL_FREE
+endif
+
 FLAGS += -DMAX_THREADS_POW2=512
 # FLAGS += -DCPU_FREQ_GHZ=2.1 #$(shell ./experiments/get_cpu_ghz.sh)
 FLAGS += -DCPU_FREQ_GHZ=$(shell ./experiments/get_cpu_ghz.sh)
 FLAGS += -DMEMORY_STATS=if\(1\) -DMEMORY_STATS2=if\(0\)
-FLAGS += -std=c++17 -g -mcx16 -fconcepts # to avoid auto in parameter declaration warning #-gdwarf
+FLAGS += -std=c++17 -mcx16 -fconcepts # to avoid auto in parameter declaration warning #-gdwarf # AJNOTE: used c++17 for exp1-2
 # FLAGS += -DLLISTDS
 FLAGS += -fno-omit-frame-pointer
 # FLAGS += -DCALL_DEBUG_GC
@@ -97,13 +107,15 @@ MINIMAL_BINS=$(patsubst ../ds/%/minimal_example.cpp,%.minimal,$(wildcard ../ds/*
 minimal_%: dir_guard
 	$(GPP) $(FLAGS) ../ds/$(@:minimal_%=%)/minimal_example.cpp -o $(bin_dir)/$@ $(LDFLAGS)
 
+
 # DATA_STRUCTURES=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/*/adapter.h))
 # DATA_STRUCTURES=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/hmlist/adapter.h))
 # DATA_STRUCTURES+=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/hm_hashtable/adapter.h))
 # DATA_STRUCTURES+=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/harris*/adapter.h))
+
 DATA_STRUCTURES=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/brown_ext_ab*/adapter.h))
-# DATA_STRUCTURES+=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/herlihy_lazy*/adapter.h))
 DATA_STRUCTURES+=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/guerr*/adapter.h))
+
 POOLS=none
 ALLOCATORS=new
 
@@ -119,6 +131,25 @@ endef
 $(foreach ds,$(DATA_STRUCTURES),$(foreach alloc,$(ALLOCATORS),$(foreach reclaim,$(RECLAIMERS),$(foreach pool,$(POOLS),$(eval $(call make-custom-target,$(ds),$(alloc),$(reclaim),$(pool)))))))
 
 #### legacy reclaimer build end
+
+
+#### timeline ppopp23 AE reclaimer build begin
+
+DATA_STRUCTURES_TIMELINE=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/bronson_pext*/adapter.h))
+DATA_STRUCTURES_TIMELINE+=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/brown_ext_ab*/adapter.h))
+
+RECLAIMERS_TL= debra none#nbr nbrplus none  # build the legacy or new specific reclaimers but not both together.
+
+define make-timeline-target =
+ubench_$(1).alloc_$(2).reclaim_$(3).pool_$(4).tl.out: dir_guard
+	$(GPP) ./main.cpp -o $(bin_dir)/ubench_$(1).alloc_$(2).reclaim_$(3).pool_$(4).tl.out -I../ds/$1 -DDS_TYPENAME=$(1) -DALLOC_TYPE=$(2) -DRECLAIM_TYPE=$(3) -DPOOL_TYPE=$(4) $(FLAGS) $(LDFLAGS)
+all: ubench_$(1).alloc_$(2).reclaim_$(3).pool_$(4).tl.out
+endef
+
+$(foreach ds,$(DATA_STRUCTURES_TIMELINE),$(foreach alloc,$(ALLOCATORS),$(foreach reclaim,$(RECLAIMERS_TL),$(foreach pool,$(POOLS),$(eval $(call make-timeline-target,$(ds),$(alloc),$(reclaim),$(pool)))))))
+
+#### timeline reclaimer build end
+
 
 #different category of relcaimers to decide which ds implementation to run
 TOKEN_RECLAIMERS = token1

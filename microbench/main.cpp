@@ -31,6 +31,7 @@ typedef long long test_type;
 
 // configure global statistics tracking and output using GSTATS (common/gstats/)
 #include "configure_gstats.h" // note: it is crucial that this is included before any other of the other headers below
+// #include "gstats.h"
 
 // each thread saves its own thread-id (should be used primarily within this file--could be eliminated to improve software engineering)
 __thread int tid = 0;
@@ -133,7 +134,9 @@ PAD;
     __RCU_DEINIT_ALL;
 
 
-
+#ifdef GSTATS_HANDLE_STATS_RECLAIMERS_WITH_EPOCHS
+    GSTATS_HANDLE_STATS_RECLAIMERS_WITH_EPOCHS(__DECLARE_STAT_ID);
+#endif
 
 
 enum KeyGeneratorDistribution {
@@ -830,9 +833,9 @@ void trial(GlobalsT * g) {
 #ifdef MEASURE_TIMELINE_STATS
     ___timeline_use = 1;
 #endif
-#ifdef MEASURE_TIMELINE_GSTATS
-    ___timeline_gstats_use = 1;
-#endif
+// #ifdef MEASURE_TIMELINE_GSTATS
+//     ___timeline_gstats_use = 1;
+// #endif
     g->start = true;
     SOFTWARE_BARRIER;
 
@@ -1115,6 +1118,9 @@ void main_continued_with_globals(auto g) {
 
     // setup per-thread statistics
     std::cout<<std::endl;
+    #ifdef GSTATS_HANDLE_STATS_RECLAIMERS_WITH_EPOCHS
+        GSTATS_HANDLE_STATS_RECLAIMERS_WITH_EPOCHS(__CREATE_STAT);
+    #endif
     GSTATS_CREATE_ALL;
     std::cout<<std::endl;
 

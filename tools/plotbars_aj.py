@@ -143,10 +143,17 @@ def replace_value(value):
         return 'nbr'
     elif value == 'wfe_df':
         return 'wfe'
+    elif value == 'brown_ext_abtree_lf':
+        return 'ABtree'
+    elif value == 'bronson_pext_bst_occ':
+        return 'OCCtree'
     else:
         return value  # Keep the original value if no condition is met
 
 data['x'] = data['x'].apply(replace_value)
+
+# aj for fig1 ppopp23
+data['series'] = data['series'].apply(replace_value)
 
 with open('output.txt', 'a') as f:
     f.write(data.to_string())
@@ -302,7 +309,7 @@ else:
 
 if args.legend_include:
     plt.legend(**legend_kwargs)
-
+    
 if not args.legend_only:
     if args.style_hooks != '': mod_style_hooks.style_after_plotting(mpl)
 

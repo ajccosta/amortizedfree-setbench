@@ -18,7 +18,7 @@
 #include "plaf.h"
 #include "allocator_interface.h"
 #include "reclaimer_interface.h"
-#ifdef GSTATS_HANDLE_STATS_DELME
+#ifdef GSTATS_HANDLE_STATS
 #   include "server_clock.h"
 #endif
 
@@ -35,9 +35,9 @@ protected:
 #define QUIESCENT(ann) ((ann)&1)
 #define GET_WITH_QUIESCENT(ann) ((ann)|1)
 
-// #if !defined DEBRA_ORIGINAL_FREE || !DEBRA_ORIGINAL_FREE
-//     #define DEAMORTIZE_FREE_CALLS
-// #endif
+#if !defined DEBRA_ORIGINAL_FREE || !DEBRA_ORIGINAL_FREE
+    #define DEAMORTIZE_FREE_CALLS
+#endif
 
 // #define DEAMORTIZE_ADAPTIVELY
 
@@ -205,10 +205,12 @@ public:
     inline void rotateEpochBags(const int tid) {
         int nextIndex = (threadData[tid].index+1) % NUMBER_OF_EPOCH_BAGS;
         blockbag<T> * const freeable = threadData[tid].epochbags[(nextIndex+NUMBER_OF_ALWAYS_EMPTY_EPOCH_BAGS) % NUMBER_OF_EPOCH_BAGS];
-#ifdef GSTATS_HANDLE_STATS_DELME
+#ifdef GSTATS_HANDLE_STATS
         GSTATS_APPEND(tid, limbo_reclamation_event_size, freeable->computeSize());
-        GSTATS_ADD(tid, /* limbo_reclamation_event_count @J */ num_reclaimed_in_events, 1);
+        GSTATS_ADD(tid, limbo_reclamation_event_count, 1);
+#if !defined DEAMORTIZE_FREE_CALLS        
         TIMELINE_START(tid);
+#endif
         // DURATION_START(tid);
 #endif
 
@@ -241,19 +243,20 @@ public:
         // GSTATS_APPEND(tid, freelist_size_in_epoch, freelist->computeSizeFast());
         // GSTATS_APPEND(tid, garbage_in_epoch, freelist->computeSizeFast() + getSizeInNodesForThisThread(tid));
         
-        //@J commented undefined gar GSTATS_SET_IX(tid, garbage_in_epoch, freelist->computeSizeFast() + getSizeInNodesForThisThread(tid), threadData[tid].debug_announcedEpoch/2 /* account for quiescent bit */);
+        GSTATS_SET_IX(tid, garbage_in_epoch, freelist->computeSizeFast() + getSizeInNodesForThisThread(tid), threadData[tid].debug_announcedEpoch/2 /* account for quiescent bit */);
 #else
-        // GSTATS_SET_IX(tid, garbage_in_epoch, getSizeInNodesForThisThread(tid), threadData[tid].debug_announcedEpoch/2 /* account for quiescent bit */);
+        GSTATS_SET_IX(tid, garbage_in_epoch, getSizeInNodesForThisThread(tid), threadData[tid].debug_announcedEpoch/2 /* account for quiescent bit */);
         // GSTATS_APPEND(tid, garbage_in_epoch, getSizeInNodesForThisThread(tid));
         // GSTATS_APPEND(tid, limbobag_size_in_epoch, getSizeInNodesForThisThread(tid));
         // GSTATS_APPEND(tid, freelist_size_in_epoch, 0);
 
         numLeftover += freeable->computeSizeFast(); //@J FIXME: WHy do I need this here?
         this->pool->addMoveFullBlocks(tid, freeable); // moves any full blocks (may leave a non-full block behind)
+        GSTATS_ADD(tid, limbo_object_frees, numLeftover);
 #endif
         SOFTWARE_BARRIER;
 
-#ifdef GSTATS_HANDLE_STATS_DELME
+#ifdef GSTATS_HANDLE_STATS
         // DURATION_END(tid, duration_rotateAndFree);
         // std::stringstream ss;
         // ss<<numLeftover;
@@ -261,7 +264,7 @@ public:
         // TIMELINE_END_Ls(tid, "rotateEpochBags", ss.str().c_str()); //threadData[tid].localvar_announcedEpoch);
         // if (tid < 96) {
 
-#ifdef AJDISABLED_INMEM_Llu_STATS
+#if !defined DEAMORTIZE_FREE_CALLS
             TIMELINE_END_INMEM_Llu(tid, timeline_rotateEpochBags, threadData[tid].debug_epochbag_announcedEpoch[nextIndex]/2 /* account for quiescent bit */); // works with experiments/timelines/daewoo_thesis as of 2023-03-27
 #endif //AJDISABLED_STATS
 
@@ -337,6 +340,7 @@ public:
         for (int i=0;i<threadData[tid].numFreesPerStartOp;++i) {
             if (!threadData[tid].deamortizedFreeables->isEmpty()) {
                 this->pool->add(tid, threadData[tid].deamortizedFreeables->remove());
+                GSTATS_ADD(tid, limbo_object_frees, 1);
             } else {
                 break;
             }
@@ -344,6 +348,7 @@ public:
 #else
         if (!threadData[tid].deamortizedFreeables->isEmpty()) {
             this->pool->add(tid, threadData[tid].deamortizedFreeables->remove());
+            GSTATS_ADD(tid, limbo_object_frees, 1);
         }
         // if (!threadData[tid].deamortizedFreeables->isEmpty()) {
         //     this->pool->add(tid, threadData[tid].deamortizedFreeables->remove());
@@ -359,7 +364,7 @@ public:
         //  which causes massive non-quiescent regions if non-Q announcement happens before bag rotation)
         SOFTWARE_BARRIER;
         threadData[tid].announcedEpoch.store(readEpoch, std::memory_order_relaxed); // note: this must be written, regardless of whether the announced epochs are the same, because the quiescent bit will vary
-#if defined GSTATS_HANDLE_STATS_DELME
+#if defined GSTATS_HANDLE_STATS
         GSTATS_SET(tid, thread_announced_epoch, readEpoch);
 #endif
         SOFTWARE_BARRIER;
@@ -378,12 +383,10 @@ public:
                     const int c = ++threadData[tid].checked;
                     if (c >= this->NUM_PROCESSES /*&& c > MIN_OPS_BEFORE_CAS_EPOCH*/) {
                         if (__sync_bool_compare_and_swap(&epoch, readEpoch, readEpoch+EPOCH_INCREMENT)) {
-#if defined GSTATS_HANDLE_STATS_DELME
+#if defined GSTATS_HANDLE_STATS
                             // GSTATS_SET_IX(tid, num_prop_epoch_latency, GSTATS_TIMER_SPLIT(tid, timersplit_epoch), readEpoch+EPOCH_INCREMENT);
                             // TIMELINE_BLIP_Llu(tid, "advanceEpoch", readEpoch);           // confirmed to work 2023-03-26
-        #ifdef AJDISABLED_INMEM_Llu_STATS
                             TIMELINE_BLIP_INMEM_Llu(tid, blip_advanceEpoch, readEpoch);     // works with experiments/timelines/daewoo_thesis as of 2023-03-27
-        #endif //#ifdef AJDISABLED_INMEM_Llu_STATS
 #endif
                         }
                     }
@@ -424,7 +427,7 @@ public:
 #endif
         threadData[tid].opsSinceRead = 0;
         threadData[tid].checked = 0;
-#ifdef GSTATS_HANDLE_STATS_DELME
+#ifdef GSTATS_HANDLE_STATS
         GSTATS_CLEAR_TIMERS;
 #endif
     }

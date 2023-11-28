@@ -52,12 +52,12 @@
       __AND gstats_output_item(PRINT_RAW, MIN, TOTAL) \
       __AND gstats_output_item(PRINT_RAW, MAX, TOTAL) \
     }) \
-    gstats_handle_stat(LONG_LONG, limbo_reclamation_event_size, 10000, { \
+    /* gstats_handle_stat(LONG_LONG, limbo_reclamation_event_size, 10000, { \
             gstats_output_item(PRINT_HISTOGRAM_LOG, NONE, FULL_DATA) \
       __AND gstats_output_item(PRINT_RAW, SUM, TOTAL) \
       __AND gstats_output_item(PRINT_RAW, COUNT, TOTAL) \
       __AND gstats_output_item(PRINT_RAW, SUM, BY_THREAD) \
-    }) \
+    }) */ \
     gstats_handle_stat(LONG_LONG, num_reclaimed_events, 1, { \
             gstats_output_item(PRINT_RAW, SUM, TOTAL) \
     }) \
@@ -272,7 +272,7 @@
             gstats_output_item(PRINT_RAW, MAX, TOTAL) \
     }) \
     gstats_handle_stat(LONG_LONG, timersplit_guard, 1, {}) */ \
-    gstats_handle_stat(LONG_LONG, timersplit_epoch, 1, {}) \
+   /*  gstats_handle_stat(LONG_LONG, timersplit_epoch, 1, {}) */ \
     gstats_handle_stat(LONG_LONG, num_prop_epoch_latency, 10, { \
             gstats_output_item(PRINT_HISTOGRAM_LOG, NONE, FULL_DATA) \
       __AND gstats_output_item(PRINT_RAW, AVERAGE, TOTAL) \
@@ -284,8 +284,8 @@
             gstats_output_item(PRINT_HISTOGRAM_LOG, NONE, FULL_DATA) \
       /*__AND gstats_output_item(PRINT_RAW, NONE, FULL_DATA)*/ \
     }) \
-    gstats_handle_stat(LONG_LONG, timersplit_token_received, 1, {}) \
-    gstats_handle_stat(LONG_LONG, timer_bag_rotation_start, 1, {}) \
+    /* gstats_handle_stat(LONG_LONG, timersplit_token_received, 1, {}) */ \
+    /* gstats_handle_stat(LONG_LONG, timer_bag_rotation_start, 1, {}) */ \
     gstats_handle_stat(LONG_LONG, token_received_time_split_ms, 10, { \
             gstats_output_item(PRINT_HISTOGRAM_LOG, NONE, FULL_DATA) \
       /*__AND gstats_output_item(PRINT_RAW, NONE, FULL_DATA)*/ \
@@ -338,9 +338,9 @@
     gstats_handle_stat(LONG_LONG, num_prop_thread_exit_time, 1, { \
             gstats_output_item(PRINT_RAW, FIRST, BY_THREAD) \
     }) */ \
-    gstats_handle_stat(LONG_LONG, thread_announced_epoch, 1, { \
+    /* gstats_handle_stat(LONG_LONG, thread_announced_epoch, 1, { \
             gstats_output_item(PRINT_RAW, FIRST, BY_INDEX) \
-    }) \
+    }) */ \
     gstats_handle_stat(LONG_LONG, thread_reclamation_start, 10, { \
            /* gstats_output_item(PRINT_RAW, NONE, FULL_DATA)*/ \
     }) \

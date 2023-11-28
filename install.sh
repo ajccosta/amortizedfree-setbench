@@ -1,6 +1,6 @@
 #!/bin/sh
 #!/bin/sh
-LIST_OF_APPS="build-essential dos2unix g++ libnuma-dev make numactl parallel python3 python3-pip time zip"
+LIST_OF_APPS="build-essential dos2unix g++ libnuma-dev make numactl parallel python3 python3-pip time zip bc"
 
 echo "############################################"
 echo "installing required ubuntu packages... $LIST_OF_APPS"
