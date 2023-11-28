@@ -126,8 +126,8 @@ def replace_value(value):
     elif value == 'nbrplus':
         return 'nbr+'
 
-    elif value == 'token1' or value == 'token4':
-        return 'token'
+    elif value == 'token4':
+        return 'token_af'
     elif value == 'ibr_rcu_df' or value == 'ibr_rcu':
         return 'rcu'
     elif value == 'qsbr_df':
@@ -147,6 +147,12 @@ def replace_value(value):
         return 'ABtree'
     elif value == 'bronson_pext_bst_occ':
         return 'OCCtree'
+    elif value == 'token1':
+        return 'naive'
+    elif value == 'token2':
+        return 'pass_first'
+    elif value == 'token3':
+        return 'periodic'
     else:
         return value  # Keep the original value if no condition is met
 

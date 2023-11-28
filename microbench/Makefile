@@ -113,8 +113,8 @@ minimal_%: dir_guard
 # DATA_STRUCTURES+=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/hm_hashtable/adapter.h))
 # DATA_STRUCTURES+=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/harris*/adapter.h))
 
-DATA_STRUCTURES=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/brown_ext_ab*/adapter.h))
-DATA_STRUCTURES+=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/guerr*/adapter.h))
+# DATA_STRUCTURES=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/brown_ext_ab*/adapter.h))
+# DATA_STRUCTURES+=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/guerr*/adapter.h))
 
 POOLS=none
 ALLOCATORS=new
@@ -138,7 +138,7 @@ $(foreach ds,$(DATA_STRUCTURES),$(foreach alloc,$(ALLOCATORS),$(foreach reclaim,
 DATA_STRUCTURES_TIMELINE=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/bronson_pext*/adapter.h))
 DATA_STRUCTURES_TIMELINE+=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/brown_ext_ab*/adapter.h))
 
-RECLAIMERS_TL= debra none#nbr nbrplus none  # build the legacy or new specific reclaimers but not both together.
+RECLAIMERS_TL= token1 token2 token3 token4#nbr nbrplus none  # build the legacy or new specific reclaimers but not both together.
 
 define make-timeline-target =
 ubench_$(1).alloc_$(2).reclaim_$(3).pool_$(4).tl.out: dir_guard

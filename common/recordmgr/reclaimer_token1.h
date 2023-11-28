@@ -226,34 +226,34 @@ public:
         //@J GSTATS_SET_IX(tid, garbage_in_epoch, getSizeInNodesForThisThread(tid), threadData[tid].tokenCount);
         this->pool->addMoveFullBlocks(tid, freeable); // moves any full blocks (may leave a non-full block behind)
 
-#if defined vtoken3
-        /*passing token even though it is still freeing objects - by Daewoo*/
-        int regular_tokenCheck = 0;
-        T* ptr;
-        while (!freeable->isEmpty()) {
-            if (regular_tokenCheck > 100) {
-                if (threadData[tid].token) {
-                    ++threadData[tid].tokenCount;
-                    // pass token
-                    threadData[tid].token = 0;
-                    threadData[(tid+1) % this->NUM_PROCESSES].token = 1;
-#ifdef GSTATS_HANDLE_STATS_DELME
-                        // let's say whenever thread 0 receives the token a new epoch has started...
-        #ifdef AJDISABLED_INMEM_Llu_STATS
-                        if (tid == 0) {
-                            // record a timeline blip for the new epoch
-                            TIMELINE_BLIP_INMEM_Llu(tid, blip_advanceEpoch, threadData[tid].tokenCount);
-                        }
-        #endif // AJDISABLED_INMEM_Llu_STATS
-#endif
-                }
-                regular_tokenCheck = 0;
-            }
-            ptr = freeable->remove();
-            this->pool->add(tid, ptr);
-            ++regular_tokenCheck;
-        }
-#endif
+// #if defined vtoken3
+//         /*passing token even though it is still freeing objects - by Daewoo*/
+//         int regular_tokenCheck = 0;
+//         T* ptr;
+//         while (!freeable->isEmpty()) {
+//             if (regular_tokenCheck > 100) {
+//                 if (threadData[tid].token) {
+//                     ++threadData[tid].tokenCount;
+//                     // pass token
+//                     threadData[tid].token = 0;
+//                     threadData[(tid+1) % this->NUM_PROCESSES].token = 1;
+// #ifdef GSTATS_HANDLE_STATS_DELME
+//                         // let's say whenever thread 0 receives the token a new epoch has started...
+//         #ifdef AJDISABLED_INMEM_Llu_STATS
+//                         if (tid == 0) {
+//                             // record a timeline blip for the new epoch
+//                             TIMELINE_BLIP_INMEM_Llu(tid, blip_advanceEpoch, threadData[tid].tokenCount);
+//                         }
+//         #endif // AJDISABLED_INMEM_Llu_STATS
+// #endif
+//                 }
+//                 regular_tokenCheck = 0;
+//             }
+//             ptr = freeable->remove();
+//             this->pool->add(tid, ptr);
+//             ++regular_tokenCheck;
+//         }
+// #endif
 
 #endif
         SOFTWARE_BARRIER;

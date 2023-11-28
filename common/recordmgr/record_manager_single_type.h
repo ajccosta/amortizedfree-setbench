@@ -48,6 +48,8 @@
 #include "reclaimer_hazardptr.h"
 // #include "reclaimer_debra_dfc.h"
 #include "reclaimer_token1.h"
+#include "reclaimer_token2.h"
+#include "reclaimer_token3.h"
 #include "reclaimer_token4.h"
 
 // maybe Record should be a size
