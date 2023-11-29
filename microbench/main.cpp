@@ -859,6 +859,8 @@ void trial(GlobalsT * g) {
         g->done = true;
 #endif
         __sync_synchronize();
+        g->endTime = std::chrono::high_resolution_clock::now();
+        __sync_synchronize();
         printUptimeStampForPERF("END");
     }
 

@@ -8,7 +8,7 @@
  *  gstats_all_data::print_stat(STAT_ID, aggregation_and_print_function)
  *  gstats_all_data::print_all_stats()
  *       uses any aggregation_and_print_function specifications made in create_stat
- * 
+ *
  * aggregation_and_print_functions:
  *  use them with lambdas to curry config args
  *  (could efficiently combine them in one loop over the data by making the agg_
@@ -27,7 +27,7 @@
  *       and you can instead get stat aggregations using a function get(expr).
  *       the ultimate goal is to be able to provide complex expressions using
  *       the following grammar:
- * 
+ *
  *         START = EXPR
  *          EXPR = FLOAT | STAT_NAME
  *          EXPR = [EXPR OPERATOR EXPR]
@@ -35,7 +35,7 @@
  *      OPERATOR = + | - | * | / | %
  *          AGGR = SUM | AVG | MIN | MAX | COUNT | VARIANCE | STDEV | HIST_LOG | HIST_LIN
  *          GRAN = BY_INDEX | BY_THREAD | ALL
- * 
+ *
  * This will allow invocations such as the following:
  *          get("3.0")                                                          -> returns array with a[0] = 3.0
  *          get("num_updates")                                                  -> returns array containing all values stored for num_updates (probably per-thread values)
@@ -79,28 +79,25 @@
 #include <cassert>
 #include <cmath>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <algorithm>
 #include "errors.h"
-// #include "error.h"
-
 #include "locks_impl.h"
 #include "plaf.h"
-#include "recordmgr/debugprinting.h"
 
 #ifndef VERBOSE
     #define VERBOSE if(0)
 #endif
-
 #define GSTATS_COMMA ,
 #define GSTATS_THREAD_PADDING_BYTES 256
 #define GSTATS_MAX_NUM_STATS 128
 #ifndef GSTATS_MAX_THREAD_BUF_SIZE
-#   define GSTATS_MAX_THREAD_BUF_SIZE (1<<20)
+#   define GSTATS_MAX_THREAD_BUF_SIZE (1<<23)
 #endif
 #define GSTATS_DATA_SIZE_BYTES 8
 #define GSTATS_BITS_IN_BYTE 8
-#define GSTATS_DEFAULT_HISTOGRAM_LIN_NUM_BUCKETS 32
+#define GSTATS_DEFAULT_HISTOGRAM_LIN_NUM_BUCKETS 10
 #define GSTATS_DEFAULT_HISTOGRAM_LOG_NUM_BUCKETS GSTATS_DATA_SIZE_BYTES * GSTATS_BITS_IN_BYTE
 #define GSTATS_SQ(x) ((x)*(x))
 #define GSTATS_USE_TEMPLATE(id, func, args) (this->data_types[id] == LONG_LONG ? func<long long>(args) : func<double>(args))
@@ -114,7 +111,8 @@ enum gstats_enum_data_type {
 enum gstats_enum_output_method {
     PRINT_RAW,
     PRINT_HISTOGRAM_LOG,
-    PRINT_HISTOGRAM_LIN
+    PRINT_HISTOGRAM_LIN,
+    PRINT_TO_FILE
 };
 enum gstats_enum_aggregation_function {
     NONE,
@@ -139,17 +137,26 @@ public:
     gstats_enum_output_method method;
     gstats_enum_aggregation_function func;
     gstats_enum_aggregation_granularity granularity;
+    const char * const output_filename;
     int num_buckets_if_histogram_lin;
     gstats_output_item(gstats_enum_output_method method
                    , gstats_enum_aggregation_function func
                    , gstats_enum_aggregation_granularity granularity
+                   , const char * const output_filename = NULL
                    , const int num_buckets_if_histogram_lin = GSTATS_DEFAULT_HISTOGRAM_LIN_NUM_BUCKETS)
             : method(method)
             , func(func)
             , granularity(granularity)
+            , output_filename(output_filename)
             , num_buckets_if_histogram_lin(num_buckets_if_histogram_lin) {
         if (granularity == TOTAL && (method == PRINT_HISTOGRAM_LOG || method == PRINT_HISTOGRAM_LIN)) {
             setbench_error("cannot use granularity TOTAL with HISTOGRAM methods");
+        }
+        if ((method == PRINT_TO_FILE) && (func != NONE || granularity != FULL_DATA)) {
+            setbench_error("PRINT_TO_FILE can only be used with aggregation function NONE, and granularity FULL_DATA");
+        }
+        if (output_filename && (method != PRINT_TO_FILE || func != NONE || granularity != FULL_DATA)) {
+            setbench_error("output_filename can only be used with PRINT_TO_FILE, NONE, FULL_DATA");
         }
     }
 };
@@ -214,8 +221,7 @@ private:
             std::cout<<std::endl; \
             for (int __tid=0;__tid<NUM_PROCESSES;++__tid) { \
                 if (thread_data[__tid].size[sid]) { \
-                    /* GSTATS_PRINT_LOWER(#type); */ \
-                    std::cout<<id_to_name[sid]<<" thread "<<__tid; \
+                    std::cout<<"thread "<<__tid; \
                     for (int __ix=0;__ix<thread_data[__tid].size[sid];++__ix) { \
                         if (get_stat<T>(__tid, sid, __ix) == std::numeric_limits<T>::max() || get_stat<T>(__tid, sid, __ix) == std::numeric_limits<T>::min()) { \
                             std::cout<<" "<<"0"; \
@@ -280,10 +286,16 @@ private:
         std::cout<<std::endl<<"linear_histogram_of_"; \
         GSTATS_PRINT_LOWER(#type); \
         std::cout<<"_"<<id_to_name[sid]<<agg_granularity_str<<"="; \
-        for (int __i=0;__i<=__num_buckets;++__i) std::cout<<(__i?" ":"")<<(__dims.GSTATS_PASTE_MIN(GSTATS_TYPE_TO_FIELD(type)) + (1+__i)*__dims.GSTATS_PASTE_BUCKET_SIZE(GSTATS_TYPE_TO_FIELD(type)))<<":"<<__histogram[__i].GSTATS_TYPE_TO_FIELD(type); \
+        for (int __i=0;__i<=__num_buckets;++__i) { \
+            if (__histogram[__i].GSTATS_TYPE_TO_FIELD(type)) { \
+                std::cout<<(__i?" ":"")<<(__dims.GSTATS_PASTE_MIN(GSTATS_TYPE_TO_FIELD(type)) + (1+__i)*__dims.GSTATS_PASTE_BUCKET_SIZE(GSTATS_TYPE_TO_FIELD(type)))<<":"<<__histogram[__i].GSTATS_TYPE_TO_FIELD(type); \
+            } \
+        } \
         std::cout<<std::endl; \
         for (int __i=0;__i<=__num_buckets;++__i) { \
-            printf("    %s%12.2f, %12.2f]: %lld\n", (__i?"(":"["), (__dims.GSTATS_PASTE_MIN(GSTATS_TYPE_TO_FIELD(type)) + __i*__dims.GSTATS_PASTE_BUCKET_SIZE(GSTATS_TYPE_TO_FIELD(type))), (__dims.GSTATS_PASTE_MIN(GSTATS_TYPE_TO_FIELD(type)) + (1+__i)*__dims.GSTATS_PASTE_BUCKET_SIZE(GSTATS_TYPE_TO_FIELD(type))), __histogram[__i].GSTATS_TYPE_TO_FIELD(type)); \
+            if (__histogram[__i].GSTATS_TYPE_TO_FIELD(type)) { \
+                printf("    %s%12.2f, %12.2f]: %lld\n", (__i?"(":"["), (__dims.GSTATS_PASTE_MIN(GSTATS_TYPE_TO_FIELD(type)) + __i*__dims.GSTATS_PASTE_BUCKET_SIZE(GSTATS_TYPE_TO_FIELD(type))), (__dims.GSTATS_PASTE_MIN(GSTATS_TYPE_TO_FIELD(type)) + (1+__i)*__dims.GSTATS_PASTE_BUCKET_SIZE(GSTATS_TYPE_TO_FIELD(type))), __histogram[__i].GSTATS_TYPE_TO_FIELD(type)); \
+            } \
         } \
     }
 
@@ -326,34 +338,40 @@ public:
         memset(computed_gstats_by_index, 0, GSTATS_MAX_NUM_STATS*sizeof(stat_metrics<double> *));
         memset(computed_gstats_by_thread, 0, GSTATS_MAX_NUM_STATS*sizeof(stat_metrics<double> *));
 
-        // parallel initialization
-        VERBOSE std::cout<<"parallel stat intialization: spawning "<<std::thread::hardware_concurrency()<<" threads"<<std::endl;
-        volatile bool start = false;
-        
-        std::thread threads[num_processes];
-        for (int tid=0;tid<num_processes;++tid) {
-            threads[tid] = std::thread([tid,&start,num_processes,this]() {
-//                while (!start) { __sync_synchronize(); }
-                //cout<<"thread "<<tid<<" initializing thread_data entry of size "<<sizeof(gstats_thread_data)<<std::endl;
-                memset(&this->thread_data[tid], 0, sizeof(gstats_thread_data));
-            });
+        #pragma omp parallel for
+        for (int i=0;i<num_processes;++i) {
+            memset(&thread_data[i], 0, sizeof(gstats_thread_data));
         }
-        start = true;
-        __sync_synchronize();
-        VERBOSE std::cout<<"parallel stat initialization: joining "<<num_processes<<" threads"<<std::endl;
-        for (int tid=0;tid<num_processes;++tid) {
-            threads[tid].join();
-        }
-        VERBOSE std::cout<<"parallel stat initialization: joined all."<<std::endl;
+//         // parallel initialization
+//         VERBOSE std::cout<<"parallel stat intialization: spawning "<<std::thread::hardware_concurrency()<<" threads"<<std::endl;
+//         volatile bool start = false;
+
+//         std::thread threads[num_processes];
+//         for (int tid=0;tid<num_processes;++tid) {
+//             threads[tid] = std::thread([tid,&start,num_processes,this]() {
+// //                while (!start) { __sync_synchronize(); }
+//                 //cout<<"thread "<<tid<<" initializing thread_data entry of size "<<sizeof(gstats_thread_data)<<std::endl;
+//                 memset(&this->thread_data[tid], 0, sizeof(gstats_thread_data));
+//             });
+//         }
+//         start = true;
+//         __sync_synchronize();
+//         VERBOSE std::cout<<"parallel stat initialization: joining "<<num_processes<<" threads"<<std::endl;
+//         for (int tid=0;tid<num_processes;++tid) {
+//             threads[tid].join();
+//         }
+//         VERBOSE std::cout<<"parallel stat initialization: joined all."<<std::endl;
     }
 
     ~gstats_t() {
+#if !defined NO_CLEANUP_AFTER_WORKLOAD
         acquireLock(&arrays_to_delete_lock);
         for (auto it = arrays_to_delete.begin(); it != arrays_to_delete.end(); it++) {
             delete[] *it;
         }
         releaseLock(&arrays_to_delete_lock);
         delete[] thread_data;
+#endif
     }
 
     template <typename T>
@@ -365,6 +383,7 @@ public:
         }
     }
     void clear_all() {
+        #pragma omp parallel for
         for (int tid=0;tid<NUM_PROCESSES;++tid) {
             for (gstats_stat_id id=0;id<num_stats;++id) {
                 memset(thread_data[tid].data + thread_data[tid].offset[id], 0, GSTATS_DATA_SIZE_BYTES*thread_data[tid].size[id]);
@@ -400,7 +419,7 @@ public:
             thread_data[tid].capacity[id] = capacity;
             auto endSize = thread_data[tid].offset[id] + thread_data[tid].capacity[id]*GSTATS_DATA_SIZE_BYTES;
             if (endSize > GSTATS_MAX_THREAD_BUF_SIZE) {
-                std::cout<<"ERROR: stat w/id "<<id<<"name="<<name<<" ends at offset "<<endSize<<" in thread_data[tid].data, which runs off the end of the array. Either shrink your stats increase GSTATS_MAX_THREAD_BUF_SIZE in common/gstats.h."<<std::endl;
+                std::cout<<"ERROR: stat w/id "<<id<<" ends at offset "<<endSize<<" in thread_data[tid].data, which runs off the end of the array. Either shrink your stats increase GSTATS_MAX_THREAD_BUF_SIZE in common/gstats.h."<<std::endl;
                 exit(1);
             }
             thread_data[tid].size[id] = 0;
@@ -418,11 +437,11 @@ public:
 
     template <typename T>
     inline T add_stat(const int tid, const gstats_stat_id id, T value, const int index) {
-        if (index >= thread_data[tid].capacity[id]) {
+        if (index < 0 || index >= thread_data[tid].capacity[id]) {
             //error("index="<<index<<" >= capacity="<<thread_data[tid].capacity[id]<<" for tid="<<tid<<" sid="<<id<<" stat="<<id_to_name[id]);
             return -1;
         }
-        assert(index < thread_data[tid].capacity[id]);
+        assert(index >= 0 || index < thread_data[tid].capacity[id]);
         T * ptr = thread_data[tid].get_ptr<T>(id);
         T retval = (ptr[index] += value);
         //cout<<"adding to id="<<id<<" index="<<index<<" value="<<value<<" result="<<ptr[index]<<std::endl;
@@ -452,18 +471,12 @@ public:
     inline T append_stat(const int tid, const gstats_stat_id id, T value) {
         int index = thread_data[tid].size[id];
         if (index >= thread_data[tid].capacity[id]) {
-#ifdef MEASURE_TIMELINE_GSTATS
-            // if("blip_ts_advance_epoch_event" == id_to_name[id] || "blip_value_advance_epoch_event" == id_to_name[id] || "blip_ts_periodic_pt_throughput" == id_to_name[id] || "blip_ts_freelist_append" == id_to_name[id] )
-            {
-                //  std::cerr<<"ERROR::"<<"index="<<index<<" >= capacity="<<thread_data[tid].capacity[id]<<" for tid="<<tid<<" sid="<<id<<" stat="<<id_to_name[id]<<std::endl;
-            }
-#endif //#ifdef MEASURE_TIMELINE_GSTATS
-            std::cerr<<"ERROR::"<<"index="<<index<<" >= capacity="<<thread_data[tid].capacity[id]<<" for tid="<<tid<<" sid="<<id<<" stat="<<id_to_name[id]<<std::endl;
+            //error("index="<<index<<" >= capacity="<<thread_data[tid].capacity[id]<<" for tid="<<tid<<" sid="<<id<<" stat="<<id_to_name[id]);
             return -1;
         }
         T * ptr = thread_data[tid].get_ptr<T>(id);
         ptr[index] = value;
-        // std::cout<<"appending to id="<<id<<" index="<<index<<" value="<<value<<" at index="<<index<<" result="<<ptr[index]<<std::endl;
+//            std::cout<<"appending to id="<<id<<" index="<<index<<" value="<<value<<" at index="<<index<<" result="<<ptr[index]<<std::endl;
         ++thread_data[tid].size[id];
         return value;
     }
@@ -639,84 +652,127 @@ private:
         }
         stat_metrics<long long> * histogram = &__histogram[1]; // handle -1s returned by log2_capped
 
-        // parallel histogram construction
-        VERBOSE std::cout<<"parallel compute histogram: spawning "<<std::thread::hardware_concurrency()<<" threads"<<std::endl;
-        std::thread threads[std::thread::hardware_concurrency()];
-        volatile bool start = false;
-        for (int thread_id=0;thread_id<std::thread::hardware_concurrency();++thread_id) {
-            //cout<<"    parallel compute histogram: spawning thread "<<thread_id<<std::endl;
-            threads[thread_id] = std::thread([thread_id, histogram, id, &start, num_buckets, metrics, this]() {
-//                while (!start) { __sync_synchronize(); }
-
-                // compute our slice of the indices
-                int slice_size = this->num_indices[id] / std::thread::hardware_concurrency();
-                int start_ix = slice_size * thread_id;
-                int end_ix = (thread_id == std::thread::hardware_concurrency()-1) ? this->num_indices[id] : slice_size * (thread_id+1);
-
-                stat_metrics<long long> * __thread_histogram = new stat_metrics<long long>[num_buckets+1];
-                for (int i=0;i<num_buckets+1;++i) {
-                    memset(&__thread_histogram[i], 0, sizeof(stat_metrics<long long>));
+        // (MOSTLY) SEQUENTIAL
+        if (num_indices[id] <= (1<<16)) {
+            if (metrics) {
+                /**
+                 * if metrics is non-null, compute histogram from metrics
+                 */
+                #pragma omp parallel
+                {
+                    #pragma omp single
+                    {
+                        #pragma omp task
+                        { for (int ix=0;ix<num_indices[id];++ix) { ++histogram[log2_capped(metrics[ix].first)].first; } }
+                        #pragma omp task
+                        { for (int ix=0;ix<num_indices[id];++ix) { ++histogram[log2_capped(metrics[ix].cnt)].cnt; } }
+                        #pragma omp task
+                        { for (int ix=0;ix<num_indices[id];++ix) { ++histogram[log2_capped(metrics[ix].min)].min; } }
+                        #pragma omp task
+                        { for (int ix=0;ix<num_indices[id];++ix) { ++histogram[log2_capped(metrics[ix].max)].max; } }
+                        #pragma omp task
+                        { for (int ix=0;ix<num_indices[id];++ix) { ++histogram[log2_capped(metrics[ix].sum)].sum; } }
+                        #pragma omp task
+                        { for (int ix=0;ix<num_indices[id];++ix) { ++histogram[log2_capped(metrics[ix].avg)].avg; } }
+                        #pragma omp task
+                        { for (int ix=0;ix<num_indices[id];++ix) { ++histogram[log2_capped(metrics[ix].variance)].variance; } }
+                        #pragma omp task
+                        { for (int ix=0;ix<num_indices[id];++ix) { ++histogram[log2_capped(metrics[ix].stdev)].stdev; } }
+                    }
                 }
-                stat_metrics<long long> * thread_histogram = &__thread_histogram[1]; // handle -1s returned by log2_capped
-
-                // compute a thread-local histogram for only our slice of the indices
-                if (metrics) {
-                    /**
-                     * if metrics is non-null, compute histogram from metrics
-                     */
-                    for (int ix=start_ix;ix<end_ix;++ix) {
-                        ++thread_histogram[log2_capped(metrics[ix].first)].first;
-                        ++thread_histogram[log2_capped(metrics[ix].cnt)].cnt;
-                        ++thread_histogram[log2_capped(metrics[ix].min)].min;
-                        ++thread_histogram[log2_capped(metrics[ix].max)].max;
-                        ++thread_histogram[log2_capped(metrics[ix].sum)].sum;
-                        ++thread_histogram[log2_capped(metrics[ix].avg)].avg;
-                        ++thread_histogram[log2_capped(metrics[ix].variance)].variance;
-                        ++thread_histogram[log2_capped(metrics[ix].stdev)].stdev;
+            } else {
+                /**
+                 * if metrics is null, compute histogram from the full data
+                 */
+                for (int ix=0;ix<num_indices[id];++ix) {
+                    for (int tid=0;tid<NUM_PROCESSES;++tid) {
+                        ++histogram[log2_capped(get_stat<T>(tid, id, ix))].none;
                     }
+                }
+            }
 
-                    // use atomic primitives to add our histogram amounts to the shared array
-                    for (int bucket=0;bucket<num_buckets;++bucket) {
-                        __sync_fetch_and_add(&histogram[bucket].first, thread_histogram[bucket].first);
-                        __sync_fetch_and_add(&histogram[bucket].cnt, thread_histogram[bucket].cnt);
-                        __sync_fetch_and_add(&histogram[bucket].min, thread_histogram[bucket].min);
-                        __sync_fetch_and_add(&histogram[bucket].max, thread_histogram[bucket].max);
-                        __sync_fetch_and_add(&histogram[bucket].sum, thread_histogram[bucket].sum);
-                        __sync_fetch_and_add(&histogram[bucket].avg, thread_histogram[bucket].avg);
-                        __sync_fetch_and_add(&histogram[bucket].variance, thread_histogram[bucket].variance);
-                        __sync_fetch_and_add(&histogram[bucket].stdev, thread_histogram[bucket].stdev);
+        // aggressively parallel (for very large)
+        } else {
+
+            // parallel histogram construction
+            VERBOSE std::cout<<"parallel compute histogram: spawning "<<std::thread::hardware_concurrency()<<" threads"<<std::endl;
+            std::thread threads[std::thread::hardware_concurrency()];
+            volatile bool start = false;
+            for (int thread_id=0;thread_id<(int) std::thread::hardware_concurrency();++thread_id) {
+                //cout<<"    parallel compute histogram: spawning thread "<<thread_id<<std::endl;
+                threads[thread_id] = std::thread([thread_id, histogram, id, &start, num_buckets, metrics, this]() {
+                    // while (!start) { __sync_synchronize(); }
+
+                    // compute our slice of the indices
+                    int slice_size = this->num_indices[id] / std::thread::hardware_concurrency();
+                    int start_ix = slice_size * thread_id;
+                    int end_ix = (thread_id == (int) std::thread::hardware_concurrency()-1) ? this->num_indices[id] : slice_size * (thread_id+1);
+
+                    stat_metrics<long long> * __thread_histogram = new stat_metrics<long long>[num_buckets+1];
+                    for (int i=0;i<num_buckets+1;++i) {
+                        memset(&__thread_histogram[i], 0, sizeof(stat_metrics<long long>));
                     }
-                } else {
-                    /**
-                     * if metrics is null, compute histogram from the full data
-                     */
-                    for (int ix=start_ix;ix<end_ix;++ix) {
-                        for (int tid=0;tid<NUM_PROCESSES;++tid) {
-                            ++thread_histogram[log2_capped(get_stat<T>(tid, id, ix))].none;
+                    stat_metrics<long long> * thread_histogram = &__thread_histogram[1]; // handle -1s returned by log2_capped
+
+                    // compute a thread-local histogram for only our slice of the indices
+                    if (metrics) {
+                        /**
+                         * if metrics is non-null, compute histogram from metrics
+                         */
+                        for (int ix=start_ix;ix<end_ix;++ix) {
+                            ++thread_histogram[log2_capped(metrics[ix].first)].first;
+                            ++thread_histogram[log2_capped(metrics[ix].cnt)].cnt;
+                            ++thread_histogram[log2_capped(metrics[ix].min)].min;
+                            ++thread_histogram[log2_capped(metrics[ix].max)].max;
+                            ++thread_histogram[log2_capped(metrics[ix].sum)].sum;
+                            ++thread_histogram[log2_capped(metrics[ix].avg)].avg;
+                            ++thread_histogram[log2_capped(metrics[ix].variance)].variance;
+                            ++thread_histogram[log2_capped(metrics[ix].stdev)].stdev;
+                        }
+
+                        // use atomic primitives to add our histogram amounts to the shared array
+                        for (int bucket=0;bucket<num_buckets;++bucket) {
+                            __sync_fetch_and_add(&histogram[bucket].first, thread_histogram[bucket].first);
+                            __sync_fetch_and_add(&histogram[bucket].cnt, thread_histogram[bucket].cnt);
+                            __sync_fetch_and_add(&histogram[bucket].min, thread_histogram[bucket].min);
+                            __sync_fetch_and_add(&histogram[bucket].max, thread_histogram[bucket].max);
+                            __sync_fetch_and_add(&histogram[bucket].sum, thread_histogram[bucket].sum);
+                            __sync_fetch_and_add(&histogram[bucket].avg, thread_histogram[bucket].avg);
+                            __sync_fetch_and_add(&histogram[bucket].variance, thread_histogram[bucket].variance);
+                            __sync_fetch_and_add(&histogram[bucket].stdev, thread_histogram[bucket].stdev);
+                        }
+                    } else {
+                        /**
+                         * if metrics is null, compute histogram from the full data
+                         */
+                        for (int ix=start_ix;ix<end_ix;++ix) {
+                            for (int tid=0;tid<NUM_PROCESSES;++tid) {
+                                ++thread_histogram[log2_capped(get_stat<T>(tid, id, ix))].none;
+                            }
+                        }
+                        // use atomic primitives to add our histogram amounts to the shared array
+                        for (int bucket=0;bucket<num_buckets;++bucket) {
+                            __sync_fetch_and_add(&histogram[bucket].none, thread_histogram[bucket].none);
                         }
                     }
-                    // use atomic primitives to add our histogram amounts to the shared array
-                    for (int bucket=0;bucket<num_buckets;++bucket) {
-                        __sync_fetch_and_add(&histogram[bucket].none, thread_histogram[bucket].none);
-                    }
-                }                        
 
-                delete[] __thread_histogram;
+                    delete[] __thread_histogram;
 
-                //cout<<"    parallel compute histogram: thread "<<thread_id<<" terminated"<<std::endl;
-            });
-            //cout<<"    parallel compute histogram: spawned thread "<<thread_id<<std::endl;
+                    //cout<<"    parallel compute histogram: thread "<<thread_id<<" terminated"<<std::endl;
+                });
+                //cout<<"    parallel compute histogram: spawned thread "<<thread_id<<std::endl;
+            }
+            __sync_synchronize();
+            start = true;
+            __sync_synchronize();
+            VERBOSE std::cout<<"parallel compute histogram: joining "<<std::thread::hardware_concurrency()<<" threads"<<std::endl;
+            for (int i=0;i<(int) std::thread::hardware_concurrency();++i) {
+                //cout<<"    parallel compute histogram: joining thread "<<i<<std::endl;
+                threads[i].join();
+                //cout<<"    parallel compute histogram: joined thread "<<i<<std::endl;
+            }
+            VERBOSE std::cout<<"parallel compute histogram: joined all."<<std::endl;
         }
-        __sync_synchronize();
-        start = true;
-        __sync_synchronize();
-        VERBOSE std::cout<<"parallel compute histogram: joining "<<std::thread::hardware_concurrency()<<" threads"<<std::endl;
-        for (int i=0;i<std::thread::hardware_concurrency();++i) {
-            //cout<<"    parallel compute histogram: joining thread "<<i<<std::endl;
-            threads[i].join();
-            //cout<<"    parallel compute histogram: joined thread "<<i<<std::endl;
-        }
-        VERBOSE std::cout<<"parallel compute histogram: joined all."<<std::endl;
 
         return histogram;
     }
@@ -766,7 +822,7 @@ private:
         if (metrics) {
             /**
              * if metrics is non-null, compute histogram from metrics
-             */                
+             */
             dims.first_min = std::numeric_limits<double>::max();
             dims.first_max = std::numeric_limits<double>::min();
             dims.cnt_min = std::numeric_limits<double>::max();
@@ -850,42 +906,69 @@ private:
         }
         return std::pair<stat_metrics<long long> *, histogram_lin_dims>(histogram, dims);
     }
-    
+
     void compute_before_printing() {
         if (already_computed_stats) return;
 //            std::cout<<"start compute_before_printing()..."<<std::endl;
 
-        // parallel statistics computation
-        VERBOSE std::cout<<"parallel stats compute before printing: spawning "<<(3*num_stats)<<" threads"<<std::endl;
-        std::thread threads[3*num_stats];
-        for (int id=0;id<num_stats;++id) {
-            if (this->data_types[id] == LONG_LONG) {
-                threads[3*id+0] = std::thread([this,id]() { this->computed_gstats_total[id] = (stat_metrics<double> *) compute_stat_metrics_total<long long>(id); });
-                // WARNING: compute_stat_metrics_INDEX SETS this->num_indices[id], WHICH IS NEEDED FOR GET_HISTOGRAM_... CALLS AND print_all!
-                threads[3*id+1] = std::thread([this,id]() { this->computed_gstats_by_index[id] = (stat_metrics<double> *) compute_stat_metrics_by_index<long long>(id, &this->num_indices[id]); });
-                threads[3*id+2] = std::thread([this,id]() { this->computed_gstats_by_thread[id] = (stat_metrics<double> *) compute_stat_metrics_by_thread<long long>(id); });
-            } else {
-                threads[3*id+0] = std::thread([this,id]() { this->computed_gstats_total[id] = compute_stat_metrics_total<double>(id); });
-                // WARNING: compute_stat_metrics_INDEX SETS this->num_indices[id], WHICH IS NEEDED FOR GET_HISTOGRAM_... CALLS AND print_all!
-                threads[3*id+1] = std::thread([this,id]() { this->computed_gstats_by_index[id] = compute_stat_metrics_by_index<double>(id, &this->num_indices[id]); });
-                threads[3*id+2] = std::thread([this,id]() { this->computed_gstats_by_thread[id] = compute_stat_metrics_by_thread<double>(id); });
+        #pragma omp parallel
+        {
+            #pragma omp single nowait
+            {
+                for (int id=0;id<num_stats;++id) {
+                    if (this->data_types[id] == LONG_LONG) {
+                        #pragma omp task
+                        { this->computed_gstats_total[id] = (stat_metrics<double> *) compute_stat_metrics_total<long long>(id); }
+                        // WARNING: compute_stat_metrics_INDEX SETS this->num_indices[id], WHICH IS NEEDED FOR GET_HISTOGRAM_... CALLS AND print_all!
+                        #pragma omp task
+                        { this->computed_gstats_by_index[id] = (stat_metrics<double> *) compute_stat_metrics_by_index<long long>(id, &this->num_indices[id]); }
+                        #pragma omp task
+                        { this->computed_gstats_by_thread[id] = (stat_metrics<double> *) compute_stat_metrics_by_thread<long long>(id); }
+                    } else {
+                        #pragma omp task
+                        { this->computed_gstats_total[id] = compute_stat_metrics_total<double>(id); }
+                        // WARNING: compute_stat_metrics_INDEX SETS this->num_indices[id], WHICH IS NEEDED FOR GET_HISTOGRAM_... CALLS AND print_all!
+                        #pragma omp task
+                        { this->computed_gstats_by_index[id] = compute_stat_metrics_by_index<double>(id, &this->num_indices[id]); }
+                        #pragma omp task
+                        { this->computed_gstats_by_thread[id] = compute_stat_metrics_by_thread<double>(id); }
+                    }
+                }
             }
         }
-        VERBOSE std::cout<<"parallel stats compute before printing: joining "<<(3*num_stats)<<" threads"<<std::endl;
-        for (int i=0;i<3*num_stats;++i) {
-            threads[i].join();
-        }
-        VERBOSE std::cout<<"parallel stats compute before printing: joined all."<<std::endl;
-        __sync_synchronize();
         already_computed_stats = true;
+
+        // // parallel statistics computation
+        // VERBOSE std::cout<<"parallel stats compute before printing: spawning "<<(3*num_stats)<<" threads"<<std::endl;
+        // std::thread threads[3*num_stats];
+        // for (int id=0;id<num_stats;++id) {
+        //     if (this->data_types[id] == LONG_LONG) {
+        //         threads[3*id+0] = std::thread([this,id]() { this->computed_gstats_total[id] = (stat_metrics<double> *) compute_stat_metrics_total<long long>(id); });
+        //         // WARNING: compute_stat_metrics_INDEX SETS this->num_indices[id], WHICH IS NEEDED FOR GET_HISTOGRAM_... CALLS AND print_all!
+        //         threads[3*id+1] = std::thread([this,id]() { this->computed_gstats_by_index[id] = (stat_metrics<double> *) compute_stat_metrics_by_index<long long>(id, &this->num_indices[id]); });
+        //         threads[3*id+2] = std::thread([this,id]() { this->computed_gstats_by_thread[id] = (stat_metrics<double> *) compute_stat_metrics_by_thread<long long>(id); });
+        //     } else {
+        //         threads[3*id+0] = std::thread([this,id]() { this->computed_gstats_total[id] = compute_stat_metrics_total<double>(id); });
+        //         // WARNING: compute_stat_metrics_INDEX SETS this->num_indices[id], WHICH IS NEEDED FOR GET_HISTOGRAM_... CALLS AND print_all!
+        //         threads[3*id+1] = std::thread([this,id]() { this->computed_gstats_by_index[id] = compute_stat_metrics_by_index<double>(id, &this->num_indices[id]); });
+        //         threads[3*id+2] = std::thread([this,id]() { this->computed_gstats_by_thread[id] = compute_stat_metrics_by_thread<double>(id); });
+        //     }
+        // }
+        // VERBOSE std::cout<<"parallel stats compute before printing: joining "<<(3*num_stats)<<" threads"<<std::endl;
+        // for (int i=0;i<3*num_stats;++i) {
+        //     threads[i].join();
+        // }
+        // VERBOSE std::cout<<"parallel stats compute before printing: joined all."<<std::endl;
+        // __sync_synchronize();
+        // already_computed_stats = true;
 //            std::cout<<"finished compute_before_printing()."<<std::endl;
     }
 
 public:
 
     template <typename T>
-    double get_sum(const gstats_stat_id id) {
-        double sum = 0;
+    T get_sum(const gstats_stat_id id) {
+        T sum = 0;
         for (int tid=0;tid<NUM_PROCESSES;++tid) {
             int size = thread_data[tid].size[id];
             auto data = thread_data[tid].get_ptr<T>(id);
@@ -902,15 +985,9 @@ public:
         switch (granularity) {
             case TOTAL:
                 if (already_computed_stats) return (stat_metrics<T> *) computed_gstats_total[id];
-#ifdef PERIODIC_THROUGHPUT_PRINT        
-                // setbench_error("functionality disabled because it is very heavyweight, and is easy to misuse, biasing results. run print_stat() before calling this, instead.");
-                   else if (this->data_types[id] == LONG_LONG) return compute_stat_metrics_total<long long>(id); //@J uncommented to enable periodic printing
-                   return compute_stat_metrics_total<long long>(id); //@J uncommented to enable periodic printing
-#else
                 setbench_error("functionality disabled because it is very heavyweight, and is easy to misuse, biasing results. run print_stat() before calling this, instead.");
-                //    else if (this->data_types[id] == LONG_LONG) return compute_stat_metrics_total<long long>(id); //@J uncommented to enable periodic printing
-                //    return compute_stat_metrics_total<long long>(id); //@J uncommented to enable periodic printing
-#endif
+//                    else if (this->data_types[id] == LONG_LONG) return compute_stat_metrics_total<long long>(id);
+//                    return compute_stat_metrics_total<double>(id);
             case BY_INDEX:
                 if (already_computed_stats) return (stat_metrics<T> *) computed_gstats_by_index[id];
                 setbench_error("functionality disabled because it is very heavyweight, and is easy to misuse, biasing results. run print_stat() before calling this, instead.");
@@ -919,8 +996,8 @@ public:
             case BY_THREAD:
                 if (already_computed_stats) return (stat_metrics<T> *) computed_gstats_by_thread[id];
                 setbench_error("functionality disabled because it is very heavyweight, and is easy to misuse, biasing results. run print_stat() before calling this, instead.");
-                //    else if (this->data_types[id] == LONG_LONG) return compute_stat_metrics_by_thread<long long>(id); 
-                //    return compute_stat_metrics_by_thread<long long>(id); 
+//                    else if (this->data_types[id] == LONG_LONG) return compute_stat_metrics_by_thread<long long>(id);
+//                    return compute_stat_metrics_by_thread<double>(id);
             default:
                 setbench_error("should not get here");
                 break;
@@ -929,10 +1006,9 @@ public:
 
     template <typename T>
     void print_stat(const gstats_stat_id id, gstats_output_item& output_item) {
-
         assert(id >= 0 && id < num_stats);
 
-        // std::cout<<"printing stat "<<id_to_name[id]<<" with id "<<id<<std::endl; 
+        //cout<<"printing stat "<<id_to_name[id]<<" with id "<<id<<std::endl;
         compute_before_printing();
 
         std::string granularity_str;
@@ -946,7 +1022,7 @@ public:
                 break;
             case TOTAL:
                 metrics = (stat_metrics<T> *) computed_gstats_total[id];
-                num_metrics = 1; 
+                num_metrics = 1;
                 granularity_str="_total";
                 break;
             case BY_INDEX:
@@ -1016,20 +1092,59 @@ public:
                         default:                setbench_error("should not reach here"); break;
                     }
                 } break;
+            case PRINT_TO_FILE:
+                {
+                    assert(output_item.granularity == FULL_DATA);
+                    assert(output_item.func == NONE);
+
+                    // // is there any actual data to write?
+                    // int rows_to_write = 0;
+                    // for (int __tid=0;__tid<NUM_PROCESSES;++__tid) {
+                    //     if (thread_data[__tid].size[id]) {
+                    //         for (int __ix=0;__ix<thread_data[__tid].size[id];++__ix) {
+                    //             rows_to_write += (get_stat<T>(__tid, id, __ix) != std::numeric_limits<T>::max()
+                    //                            && get_stat<T>(__tid, id, __ix) != std::numeric_limits<T>::min());
+                    //         }
+                    //     }
+                    // }
+
+                    // // if so, create an output file
+                    // if (rows_to_write) {
+                        std::ofstream ofile;
+                        if (output_item.output_filename) {
+                            ofile.open(output_item.output_filename);
+                        } else {
+                            std::stringstream ss;
+                            ss<<id_to_name[id];
+                            ss<<".txt";
+                            ofile.open(ss.str());
+                        }
+
+                        for (int __tid=0;__tid<NUM_PROCESSES;++__tid) {
+                            if (thread_data[__tid].size[id]) {
+                                for (int __ix=0;__ix<thread_data[__tid].size[id];++__ix) {
+                                    ofile<<__tid;
+                                    ofile<<" "<<__ix;
+                                    if (get_stat<T>(__tid, id, __ix) == std::numeric_limits<T>::max() || get_stat<T>(__tid, id, __ix) == std::numeric_limits<T>::min()) {
+                                        ofile<<" "<<"0";
+                                    } else {
+                                        ofile<<" "<<get_stat<T>(__tid, id, __ix);
+                                    }
+                                    ofile<<std::endl;
+                                }
+                            }
+                        }
+                        ofile.close();
+                    // }
+                } break;
             default: setbench_error("should not reach here"); break;
         }
     }
 
     void print_all() {
-        
-// #if /*!defined LISTDS &&*/ defined USE_TREE_STATS
         for (auto it = output_config.begin(); it != output_config.end(); it++) {
             GSTATS_USE_TEMPLATE(it->first, print_stat, it->first GSTATS_COMMA it->second);
         }
-// #else
-        //  compute_before_printing();
-        // COUTATOMIC("not printing with print_all for list ds\n");
-// #endif
     }
 
 };

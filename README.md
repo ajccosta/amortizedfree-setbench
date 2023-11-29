@@ -217,7 +217,7 @@ Now you can analyse the generated plots and compare them with the expected plots
 
 
 
-## 🎉 What does run.sh do?
+## 🎉 What does run_exp1.sh do?
 
 Inputs for experiments are provided from the following files:
 

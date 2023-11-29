@@ -221,9 +221,9 @@ public:
         // }
         // TIMELINE_BLIP_Llu(tid, "numFreesPerStartOp", threadData[tid].numFreesPerStartOp);
         freelist->appendMoveFullBlocks(freeable);
-        // @J GSTATS_SET_IX(tid, garbage_in_epoch, freelist->computeSizeFast() + getSizeInNodesForThisThread(tid), threadData[tid].tokenCount);
+        GSTATS_SET_IX(tid, garbage_in_epoch, freelist->computeSizeFast() + getSizeInNodesForThisThread(tid), threadData[tid].tokenCount);
 #else
-        //@J GSTATS_SET_IX(tid, garbage_in_epoch, getSizeInNodesForThisThread(tid), threadData[tid].tokenCount);
+        GSTATS_SET_IX(tid, garbage_in_epoch, getSizeInNodesForThisThread(tid), threadData[tid].tokenCount);
         this->pool->addMoveFullBlocks(tid, freeable); // moves any full blocks (may leave a non-full block behind)
 
 // #if defined vtoken3
@@ -313,14 +313,14 @@ public:
             threadData[(tid+1) % this->NUM_PROCESSES].token = 1;
             //__sync_synchronize();
 
-#ifdef GSTATS_HANDLE_STATS_DELME
-#ifdef AJDISABLED_INMEM_Llu_STATS
+#ifdef GSTATS_HANDLE_STATS
+// #ifdef AJDISABLED_INMEM_Llu_STATS
             // let's say whenever thread 0 receives the token a new epoch has started...
-            if (tid == 0) {
+            if (tid == 5) {
                 // record a timeline blip for the new epoch
                 TIMELINE_BLIP_INMEM_Llu(tid, blip_advanceEpoch, threadData[tid].tokenCount);
             }
-#endif // AJDISABLED_INMEM_Llu_STATS
+// #endif // AJDISABLED_INMEM_Llu_STATS
 #endif
 
 // #if defined GSTATS_HANDLE_STATS_DELME
@@ -389,6 +389,9 @@ public:
 //         GSTATS_APPEND(tid, bag_last_size, threadData[tid].last->computeSize());
 //         GSTATS_APPEND(tid, token_counts, threadData[tid].tokenCount);
 // #endif
+        if (tid == 0) {
+            std::cout<<"global_epoch_counter="<<threadData[0].tokenCount<<std::endl;
+        }
     }
 
     void initThread(const int tid) {

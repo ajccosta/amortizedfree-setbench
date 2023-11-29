@@ -18,6 +18,9 @@
 //__thread long long currentAllocatedBytes = 0;
 //__thread long long maxAllocatedBytes = 0;
 
+// optional statistics tracking
+#include "gstats_definitions_epochs.h"
+
 template<typename T = void>
 class allocator_new : public allocator_interface<T> {
     PAD; // post padding for allocator_interface
@@ -79,7 +82,15 @@ public:
 #ifdef DAOI_RUSLON_RECLAIMERS
         free( (char*) p); // freeing placement malloced memory 
 #else
+
+#if defined TIMELINE_RECORD_EVERY_DEAMORTIZED_FREE
+        TIMELINE_START(tid);
+#endif
+
         delete p;
+#if defined TIMELINE_RECORD_EVERY_DEAMORTIZED_FREE
+        TIMELINE_END_INMEM_Llu(tid, timeline_freeOne, 0);
+#endif        
 #endif //DAOI_RUSLON_RECLAIMERS
 #endif
     }
