@@ -105,7 +105,7 @@ protected:
         int tokenCount; // how many times this thread has had the token
         blockbag<T> * curr;
         blockbag<T> * last;
-#ifdef DEAMORTIZE_FREE_CALLS
+#ifdef DEAMORTIZE_FREE_CALLS_AJ
         blockbag<T> * deamortizedFreeables;
         int numFreesPerStartOp;
 #endif
@@ -209,7 +209,7 @@ public:
 #endif
 
         // int numLeftover = 0;
-#ifdef DEAMORTIZE_FREE_CALLS
+#ifdef DEAMORTIZE_FREE_CALLS_AJ
         auto freelist = threadData[tid].deamortizedFreeables;
         // if (!freelist->isEmpty()) {
         //     numLeftover += (freelist->isEmpty()
@@ -349,7 +349,7 @@ public:
 // #endif
         }
 
-#ifdef DEAMORTIZE_FREE_CALLS
+#ifdef DEAMORTIZE_FREE_CALLS_AJ
     // TODO: make this work for each object type
 
     if (!threadData[tid].deamortizedFreeables->isEmpty()) {
@@ -401,7 +401,7 @@ public:
         if (threadData[tid].last == NULL) {
             threadData[tid].last = new blockbag<T>(tid, this->pool->blockpools[tid]);
         }
-#ifdef DEAMORTIZE_FREE_CALLS
+#ifdef DEAMORTIZE_FREE_CALLS_AJ
         assert(0);
         threadData[tid].deamortizedFreeables = new blockbag<T>(tid, this->pool->blockpools[tid]);
         threadData[tid].numFreesPerStartOp = 1;
@@ -426,7 +426,7 @@ public:
             delete threadData[tid].last;
             threadData[tid].last = NULL;
         }
-#ifdef DEAMORTIZE_FREE_CALLS
+#ifdef DEAMORTIZE_FREE_CALLS_AJ
         this->pool->addMoveAll(tid, threadData[tid].deamortizedFreeables);
         delete threadData[tid].deamortizedFreeables;
 #endif
@@ -440,7 +440,7 @@ public:
             threadData[tid].tokenCount  = 0; // thread with token will update this itself
             threadData[tid].curr = NULL;
             threadData[tid].last = NULL;
-#ifdef DEAMORTIZE_FREE_CALLS
+#ifdef DEAMORTIZE_FREE_CALLS_AJ
             threadData[tid].deamortizedFreeables = NULL;
 #endif
         }

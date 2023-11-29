@@ -93,9 +93,9 @@ protected:
 
 /*Check and free one object on every operation - by Daewoo*/
 #define vtoken4
-#if defined vtoken4
-    #define DEAMORTIZE_FREE_CALLS
-#endif
+// #if defined vtoken4
+//     #define DEAMORTIZE_FREE_CALLS
+// #endif
 
 #ifdef RAPID_RECLAMATION
 #else

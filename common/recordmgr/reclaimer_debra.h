@@ -35,9 +35,9 @@ protected:
 #define QUIESCENT(ann) ((ann)&1)
 #define GET_WITH_QUIESCENT(ann) ((ann)|1)
 
-#if !defined DEBRA_ORIGINAL_FREE || !DEBRA_ORIGINAL_FREE
-    #define DEAMORTIZE_FREE_CALLS
-#endif
+// #if !defined DEBRA_ORIGINAL_FREE || !DEBRA_ORIGINAL_FREE
+//     #define DEAMORTIZE_FREE_CALLS
+// #endif
 
 // #define DEAMORTIZE_ADAPTIVELY
 

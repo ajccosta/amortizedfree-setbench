@@ -56,10 +56,10 @@ ifeq ($(debug_timeline_record_every_deamortized_free), 1)
 	FLAGS += -DTIMELINE_RECORD_EVERY_DEAMORTIZED_FREE
 endif
 
-debra_orig_free=1
-ifeq ($(debra_orig_free), 1)
-	FLAGS += -DDEBRA_ORIGINAL_FREE
-endif
+# debra_orig_free=1
+# ifeq ($(debra_orig_free), 1)
+# 	FLAGS += -DDEBRA_ORIGINAL_FREE
+# endif
 
 FLAGS += -DMAX_THREADS_POW2=512
 # FLAGS += -DCPU_FREQ_GHZ=2.1 #$(shell ./experiments/get_cpu_ghz.sh)
@@ -138,7 +138,7 @@ $(foreach ds,$(DATA_STRUCTURES),$(foreach alloc,$(ALLOCATORS),$(foreach reclaim,
 DATA_STRUCTURES_TIMELINE=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/bronson_pext*/adapter.h))
 DATA_STRUCTURES_TIMELINE+=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/brown_ext_ab*/adapter.h))
 
-RECLAIMERS_TL= debra token1 token2 token3 token4#nbr nbrplus none  # build the legacy or new specific reclaimers but not both together.
+RECLAIMERS_TL= #ONLY DEBRA with Bronson tree, other reclaimers not supported.
 
 define make-timeline-target =
 ubench_$(1).alloc_$(2).reclaim_$(3).pool_$(4).tl.out: dir_guard

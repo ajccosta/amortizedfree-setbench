@@ -5,6 +5,7 @@
 *.html
 *.txt
 *.data*
+*.log
 #ignore .txt in bin/
 microbench/bin/*.*
 
