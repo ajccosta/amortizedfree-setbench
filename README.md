@@ -1,30 +1,26 @@
 This repo contains the code and experiment setup used to evaluate the amortized freeing and token EBR algorithm presented in PPOPP23 paper titled: "Are Your Epochs Too Epic? Batch Free Can Be Harmful".
 
-#to reproduce exp1 and exp2:
-1. switch to af_experiments/
-2. ./run_exp1.sh for exp1 and ./run_exp2.sh for exp2.
-3. To change experiment parameters like workload, data structure, change in exp1_run_tree.py or exp2_run_tree.py
-4. After experiments completes plots will be generated inside plots/
+The experiments we run for the paper are of two kinds:
+1. [TYPE1] Performance and peak memory usage experiments.
+          - These experiements are run from directory: amortizedfree-setbench/af_experiments
+2. [TYPE2] Timeline graph experiments
+          - These experiments are run from directory: amortizedfree-setbench/microbench/experiments/timelines/
 
 #CREDITS:
 This repo builds upon the  nbr_setbench_plus project used for neutralization based reclamation techniques, which in turn used the original [setbench](https://gitlab.com/trbot86/setbench) of [Multicore Lab](https://mc.uwaterloo.ca/) headed by Prof. Trevor Brown to test and evaluate lockfree data structures and reclamation algorithms.
 
 
-###TODO: Daewoo and I gonna use following style of readme for ppopp23 AE.
-
-## 🏁 Getting Started
+# 🏁 Getting Started
 
 These instructions will get you a copy of the artifact up and running on your machine for development and testing purposes. This can be done in two ways: 1) use our docker provided image or 2) alternatively prepare your machine to run our artifact.
 
-``` NOTE: To better reproduce results of amortized freeing and token ebr technique we suggest to run the amortizedfree-setbench on a multicore NUMA machine with at least two NUMA nodes.```
-
-# Running on Docker
+## Running on Docker
 * Install the latest version of Docker on your system. We tested the artifact with the Docker version 19.03.6, build 369ce74a3c. Instructions to install Docker may be found at https://docs.docker.com/engine/install/ubuntu/. Or you may refer to the "Installing Docker" section at the end of this README.
 
   To check the version of docker on your machine use: 
 
     ``` ~$ docker -v```
-* First, download the artifact named amortizedfree-setbench.zip from the ppopp2021 artifact submission link (or at url: ??????).
+* First, download the artifact named amortizedfree-setbench.zip from the ppopp2023 artifact submission link.
 
 * Find docker image named amortizedfree_docker.tar.gz in amortizedfree-setbench/ directory. 
   And load the downloaded docker image with the following command.
@@ -41,16 +37,16 @@ These instructions will get you a copy of the artifact up and running on your ma
     ```~$ ls ```
 If this succeeds you can move to the quick test section and skip the following section which discusses alternative ways to prepare your machine to run the artifact.
 
-# *Alternative Way:* Preparing Host Machine:
+## *Alternative Way:* Preparing Host Machine:
 In case you may want to prepare the host machine itself to run the artifact locally follow these instructions.
 
-First, download the artifact named amortizedfree-setbench.zip from ppopp2023 artifact submission link (or at ???????https://zenodo.org/record/4295604????????).
+First, download the artifact named amortizedfree-setbench.zip from ppopp2023 artifact submission link.
 
 The artifact requires the following packages/softwares on your Linux machine to compile and run the artifact.
 
 ```
  Use your system's package manager to install:
- > build-essential dos2unix g++ libnuma-dev make numactl parallel python3 python3-pip time zip micro
+ > build-essential dos2unix g++ libnuma-dev make numactl parallel python3 python3-pip time zip micro bc
 ```
 
 ```
@@ -75,50 +71,29 @@ Use the following commands:
 ~$ sudo apt-get update
 
 ~$ sudo apt-get install -y build-essential dos2unix g++ libnuma-dev make numactl parallel \
- python3 python3-pip time zip
+ python3 python3-pip time zip bc
 
 ~$ pip3 install numpy matplotlib pandas seaborn ipython ipykernel jinja2 colorama
 ```
 
 Once the required software/packages are installed we are ready to run the experiments and generate the figures discussed in  the submitted version of the paper.
 
-## 🔧 Quick Test
-Until now, we have prepared the setup needed to compile and run the artifact. Now, let's do a quick test where we will compile, run and generate results to verify that the original experiment (described later) would work correctly.
-
-We would run two types of experiments. First, experiment to evaluate throughput (Figure ??? in the paper) and second experiment to evaluate peak memory usage??? (Figure ??? in the paper)
+## 🔧 Quick Test [approximately takes ~2 mins]
+Until now, we have prepared the setup needed to compile and run the artifact. Now, let's do a quick test where we will compile and run  TYPE1 experiments to verify that the original experiment (described later) would work correctly.
 
 Change directory to amortizedfree-setbench (if you used the alternative way to prepare your machine to execute the artifact) otherwise if you are in the docker container you would already be in amortizedfree-setbench/ directory.
 
-### Evaluate throughput: 
 To quickly compile, run and see default results for throughput experiment follow these steps:
 
 * *step1*. Assuming you are currently in amortizedfree-setbench, execute the following command:
 
     ```~$ cd af_experiments```.
-* *step2*. Run the following command: 
 
-    ```~$ ./run_exp1.sh```
+* *step2*. Run the following script: 
 
-The Quick test uses inputs provided from files in nbr_experiments/inputs/.
+    ```~$ ./run_quicktest.sh```
 
-Default content of the files is comma separated values:
-
-  * *reclaimer.txt*      : nbrplus,debra
-  * *steps.txt*          : 1
-  * *threadsequence.txt* : 2,4,8,16
-  * *workloadtype.txt*   : 50
-  * *treesize.txt*       : 2000000
-  * *listsize.txt*       : 20000
-
-### Evaluate memory usage: 
-To quickly compile, run and see default results for peak memory usage experiment follow these steps:
-
-* *step1*. Assuming you are currently in amortizedfree-setbench, execute the following command:
-
-  ```~$ cd af_experiments```.
-* *step2*. Run the following command: 
-
-  ```~$ ./run_exp2.sh```
+This compiles the benchmark and run quick trials for all the experiments on a subset of run parameters which we will be run in detail in next sections.
 
 **WARNING:** if you are running the experiment in the docker container **DO NOT** exit the terminal after the Quick test finishes as we would need to copy the generated figures on the host machine to be able to see them.  
 
@@ -148,97 +123,89 @@ Now you can analyse the generated plots.
 
 ## 🔧 Running the tests with configuration reported in submitted paper [full experiments takes ~5 hrs]:
 
-### Throughput experiments:
-To reproduce figures reported in the submitted version of the paper please change inputs as indicated below:
-
-Inside af_experiments/inputs/ change:
-
-  * *reclaimer.txt*      : nbrplus,debra,none,ibr,qsbr,ibr_rcu,hazardptr
-  * *steps.txt*          : 1,2,3
-  * *threadsequence.txt* : 18,36,54,72,90,108,126,144,162,180,198,216,234,252
-  * *workloadtype.txt*   : 5,25,50
-  * *treesize.txt*       : 2000000
-  * *listsize.txt*       : 20000       #this was list size used in experiments of submitted version. The paper's typo where it mentions 2K for the list size woud be corrected in the Camera ready version.
-
-> Please ensure that comma separated values are provided. Simply copy pasting the aforementioned values in each corresponding input files should work, make sure not to introduce any space or newline at the end of a line in input files as that could cause errors in the script.
-
-> **Warning**: Using a list size more than 20K will take long time in prefilling the list. Therefore, we suggest to use a list size of less than or equal to 20K. 
-
-### Steps to change inputs inside the docker container:
-``` ~$ cd af_experiments/inputs/ ```
-
-Now change the appropriate '.txt' file using micro text editor (or editor of your choice, we have micro text editors pre-installed in the docker image) using following example command:
-
-``` ~$ micro reclaimer.txt ```
-
-save your changes and repeat this process for other input files listed above.
-
-Next, repeat the following steps as done in the Quick test.
-### Evaluate exp1:  ??? content will changes??? 
-
-* *step1*. Assuming you are currently in nbr_setbench, execute the following command:
-
-    ```~$ cd af_experiments```.
-* *step2*. Run the following command: 
-
-    ```~$ ./run_exp1.sh```
-
- For the figures in the submitted paper we tested NBR on a NUMA machine with the following configuration:
-
-    * Architecture        : Intel x86_64
-    * CPU(s)              : 144
-    * Sockets(s)          : 4
-    * Thread(s) per core  : 2
-    * Core(s) per socket  : 18
-    * Memory              : 188G
-
-Note: as long as the amortizedfree-setbench is run on a 144 thread machine with 4 NUMA nodes the generated plots should match the expected plots.
-
-### Evaluate exp2: 
+### TYPE1 Experiments:
+TYPE1 experiments refer to all the experiments reported in paper that correspond to measuring performance and peak memory usage. This includes experiments correponding to Figure 11a, b, Figure 1 and Figure 10 in the paper.
 
 * *step1*. Assuming you are currently in amortizedfree-setbench, execute the following command:
 
     ```~$ cd af_experiments```.
-* *step2*. Run the following command:
+
+* *step2*. Run the following script to run experiment similar to Fig 11 a: 
+
+    ```~$ ./run_exp1.sh```
+
+    - This by default compiles, runs and produces plots similar to the experiment in Fig 11 a of the paper that compares throughput of amortized free token-EBR (token_af in paper and token4 in code) with other reclaimation algorithms.  
     
+    - generated graphs can be found in  af_experiments/plots/plot_data_exp1
+
+* *step3*. Run the following script to run experiment similar to Fig 11 b: 
+
     ```~$ ./run_exp2.sh```
 
-### ⛏️ Analyze generated figures:
+    - This by default compiles, runs and produces plots similar to the experiment in Fig 11 b of the paper that compares throughput of each reclamation algorithm with its amortized free version.  
+
+    - generated graphs can be found in  af_experiments/plots/plot_data_exp2
+
+* *step4*. Run the following script to run experiment similar to Fig 1: 
+
+    ```~$ ./run_fig1.sh```
+
+    - This by default compiles, runs and produces plots similar to the experiment in Fig 1 of the paper that compares throughput and peak memory usage of  DEBRA and leaky implementation of two popular trees.
+
+    - generated graphs can be found in  af_experiments/plots/plot_data_fig1
+
+* *step5*. Run the following script to run experiment similar to Fig 10: 
+
+    ```~$ ./run_fig10.sh```
+
+    - This by default compiles, runs and produces plots similar to the experiment in Fig 10 of the paper that compares throughput of each variant of the proposed token algorithm, namely naive token(token1 in code), pass first token(token2 in code), periodic token(token3 in code) and amortized token(token4 in code).
+
+    - generated graphs can be found in  af_experiments/plots/plot_data_fig10
+
+All the above bash scripts execute python scripts (namely, exp1_run_tree.py, exp2_run_tree.py, fig1_run.py, fig10_run.py) that sets up the experiment, runs the trials and generates plots similar to those in paper.
+The plots are generated in a subfolder within af_experiments/plots whose names is self explanatory. 
+
+It is possible to run the experiments with run parameters other than those used in the paper (also set as defaults in scripts).
+
+#### [Optional] How to change default run parameters?:
+
+The python scripts exp1_run_tree.py, exp2_run_tree.py, fig1_run.py, fig10_run.py have define_experiment() method wherein following named run parametrs are declared.
+Within these python scripts one can change their values.
+
+- RECLAIMER_ALGOS: To provide any of the reclamatin algorithms supported by the benchmark
+- __trials : To specify number of times a trial shoud repeat
+-  TOTAL_THREADS : To specify number threads a trial should be run 
+- INS_DEL_HALF: To specify the workload type (fraction of inserts deletes)
+-  DS_SIZE : To specify the maximum size of a data structure
+- DS_TYPENAME: To specify one of the supported data structures
+
+
+#### ⛏️ Analyze generated figures:
+
+If you are using the docker container, then copy the generated plots from the af_experiments/plots/expected_plots folder to your current directory.
+
+    ```~$ sudo docker cp amortizedfree:/amortizedfree-setbench/af_experiments/plots/ .```
+
+Now, you can analyse the generated plots and compare them with the expected plots (in af_experiments/plots/expected_plots/) assuming you have access to similar hardware.
 
 Once the above test completes the resultant figures could be found in af_experiments/plots/. All plots follow the naming convention mentioned in the quick test section.
 
-We have put the expected figures for this experiment in the af_experiments/plots/expected_plots/ directory. Please copy this directory in the same way as we copied  af_experiments/plots/generated_plots/
+graphs in af_experiments/plots/plot_data_exp1 (fig 11 a, 11 b) use jemalloc allocator and have the following naming convention:
+  - throughput-[dsname]-u[updatefraction]-sz[DS_size].png 
+    For example, throughput-brown_ext_abtree_lf-u50-sz20000000.png represented throughput graph for ABTree with updates- 50%inserts and 50% deletes- and abtree size 20M nodes.
 
-* Copy the generated plots from the nbr_experiments/plots/expected_plots folder to your current directory.
+  - maxresident-[dsname]-u[updatefraction]-sz[DS_size].png
+    For example, maxresident-brown_ext_abtree_lf-u50-sz20000000.png represented peak mmeory usage graph for ABTree with updates- 50%inserts and 50% deletes- and abtree size 20M nodes.
 
-    ```~$ sudo docker cp amortizedfree:/amortizedfree-setbench/af_experiments/plots/expected_plots/ .```
+graphs in af_experiments/plots/plot_data_exp1 (fig 1 and 10) use ABtree data structure with 20M nodes and have the following naming convention:
+  - throughput-[reclaimer]-[allocator].png 
+    For example, throughput-debra-jemalloc.png represented throughput graph for ABTree with updates- 50%inserts and 50% deletes- and abtree size 20M nodes and jemalloc allocaor.
 
-Now you can analyse the generated plots and compare them with the expected plots assuming you have access to similar hardware.
-
-
-
-## 🎉 What does run_exp1.sh do?
-
-Inputs for experiments are provided from the following files:
-
-  * *reclaimer.txt*      : comma separated list of reclamation algorithm names
-  * *steps.txt*          : comma separated list of number of steps each run needs to repeat.
-  * *threadsequence.txt* : comma separated list of thread sequence you want to run experiements with. This sequence becomes the X-axis for the generated throughput figures.
-  * *workloadtype.txt*   : comma separated list of workload types. For eg., to evaluate with workload type of 50% inserts and 50% deletes enter 50 in workloadtype.txt.
-  * *treesize.txt*       : Max number of nodes in tree.
-  * *listsize.txt*       : Max number of nodes in list.
+  - maxresident-[dsname]-[allocator].png
+    For example, maxresident-brown_ext_abtree_lf-jemalloc.png represented peak memory usage graph for ABTree with updates- 50%inserts and 50% deletes- and abtree size 20M nodes.
 
 
-run_exp1.sh/run_exp2.sh will do the following:
-
-1. Compile the benchmark with reclamation algorithms and data structures.
-2. Run all reclamation algorithms (NBR+, Debra, QSBR, RCU, IBR, Hazard Pointer, None), for a sequence of threads (say, 18, 36, 54, .... 234, 252), for varying workloads (say, 50% inserts 50% deletes, 25% inserts 25% deletes, and 5% inserts 5% deletes) for DGT. One reclamation algorithm is run several times. Each run is called one step. For example, NBR+ executing with 18 threads for a workload type that has 50% inserts and 50% deletes is called one step in our experiments.
-3. Produce figures in directory amortizedfree-setbench/af_experiments/plots/generated_plots.
-4. Run all reclamation algorithms, for a sequence of threads, for varying workloads with lazylist. One reclamation algorithm is run several times. Each run is called one step. For example, NBR+ executing with 18 threads for a workload type that has 50% inserts and 50% deletes is called one step in our experiments.
-5. Produce figures in directory amortizedfree-setbench/af_experiments/plots/generated_plots.
-
-
-## 🚀 Types of machines we evaluated NBR-setnbench on: [??????to be updated]
+#### 🚀 Types of machines we evaluated amortizedfree-setbench on:
 
 * Smallest NUMA machine we have tested NBR has following configuration:
   * Architecture        : Intel x86_64
@@ -255,20 +222,71 @@ run_exp1.sh/run_exp2.sh will do the following:
   * Core(s) per socket  : 24
   * Memory              : 377G
 
-## 🎉 Claims from the paper supported by the artifact: [???? To be updated????????]
-- *claim 1*. NBR+ is faster than other reclamation algorithms considered in the paper.
-  - please check throughput plots in nbr_setbench/nbr_experiments/plots/generated_plots.
-  - On our 144 CPUs and 4 sockets machine with 188G memory NBR+ has better throughput after 72 threads than other reclamation algorithms. 
-- *claim 2*. NBR+ has approximately constant peak memory usage across different threads.
-  - please check mem-usage plots in nbr_setbench/nbr_experiments/plots/generated_plots
-  - On our 144 CPUs and 4 sockets machine with 188G memory NBR+ has approximately constant peak memory usage.
+#### 🎉 Claims from the paper supported by the artifact:
+- *claim 1*. Amortized-free Token-EBR (token4 in code) is faster than other reclamation algorithms considered in the paper.
+  - please check throughput plots in af_experiments/plots/plot_data_exp1.
 
+- *claim 2*. The amortized freeing significantly improves the performance of majority of the state of the art relciamers.
+  - please check af_experiments/plots/plot_data_exp2
+
+
+
+
+
+### TYPE2 Experiments:
+
+TYPE2 experiments refer to all the experiments reported in paper that correspond to generating timeline graphs. This includes experiments correponding to Figure 2, 3, 4 (related to Debra) and Figure 6, 7, 8, 9 (related to token-EBR) in the paper.
+
+* *step1*. Assuming you are currently in amortizedfree-setbench, execute the following command to run DEBRA related timeline experiments:
+
+    ```~$ cd microbench/experiments/timelines/debra```.
+
+* *step2*. Run the following script to run experiment similar to Fig 2: 
+
+    ```~$ ./run_bf_threads.sh```
+
+    - This by default compiles, runs and produces plots (in debra/data/) similar to the experiment in Fig 2 of the paper that compares time spent freeing batches of retired nodes for DEBRA when used with ABtree and jemalloc at 96 and 192 threads.  
+    
+    - generated graphs freetime_batch_jemalloc_96_interleave_pinyes.png shows timeline for 96 threads and 
+    and freetime_batch_jemalloc_192_interleave_pinyes.png shows timeline for 192 threads
+
+
+* *step3*. Run the following script to run experiment similar to Fig 3,4: 
+
+    ```~$ ./run_bf_vs_af.sh```
+
+    - This by default compiles, runs and produces plots similar to the experiment in Fig 3 of the paper that compares time spent by individual free calls at 192 threads for original DEBRA(batch free, freeOne_batch_jemalloc_192_interleave_pinyes.png) and amortized DEBRA (amortized free, freeOne_amortized_jemalloc_192_interleave_pinyes.png) for ABtree using jemalloc.  
+    
+    - Additionally it also produces plots (in debra/data/) similar to the experiment in Fig 4 of the paper that number of garbage nodes in each epoch for batch free (upper, unreclaimed_batch_jemalloc_192_interleave_pinyes.png) and amortized free (lower, unreclaimed_amortized_jemalloc_192_interleave_pinyes.png) for DEBRA when used with ABtree and jemalloc at 192 threads.  
+
+If you are in docker machine the generated graphs can be copied in the way as described above.
+
+To generate token algorithms related timeline graphs:
+
+* *step1*. Assuming you are currently in amortizedfree-setbench, execute the following command to run TOKEN related timeline experiments:
+
+    ```~$ cd microbench/experiments/timelines/tokens```.
+
+* *step2*. Run the following script to run experiment similar to Fig 6,7,8,9: 
+
+    ```~$ ./run.sh```
+
+    - This by default compiles, runs and produces plots (in debra/data/) similar to the experiment in Fig 6,7,8,9 of the paper that compares time spent freeing batches of retired nodes for all 4 variants of token algorithms when used with ABtree and jemalloc at 192 threads.  
+
+    - generated graphs would be found in tokens/data whihc are generated for abtree at 192 threads and jemalloc for each token variant.
+    
+    - Fig 6 (upper) depicting  timeline for batch freeing is shown by freeOne_token1_jemalloc_192_interleave_pinyes.png and (lower)depicting number of grabage nodes is shown by unreclaimed_token1_jemalloc_192_interleave_pinyes.png for token1 (Naive Token EBR)
+
+    - Fig 7 (upper) depicting  timeline for batch freeing is shown by freeOne_token2_jemalloc_192_interleave_pinyes.png and (lower)depicting number of grabage nodes is shown by unreclaimed_token2_jemalloc_192_interleave_pinyes.png for token2 (Pass-First Token EBR)
+
+    - Fig 8 (upper) depicting  timeline for batch freeing is shown by freeOne_token3_jemalloc_192_interleave_pinyes.png and (lower)depicting number of grabage nodes is shown by unreclaimed_token3_jemalloc_192_interleave_pinyes.png for token3 (Periodic Token EBR)
+
+    - Fig 9 (upper) depicting  timeline for batch freeing is shown by freeOne_token4_jemalloc_192_interleave_pinyes.png and (lower)depicting number of grabage nodes is shown by unreclaimed_token4_jemalloc_192_interleave_pinyes.png for token4 (Amortized-Free Token EBR)
+    
 ## ✍️ References
 1. https://gitlab.com/trbot86/setbench
 2. https://mc.uwaterloo.ca/code.html
-3. David, T., Guerraoui, R., & Trigonakis, V. (2015). Asynchronized concurrency: The secret to scaling concurrent search data structures. ACM SIGARCH Computer Architecture News, 43(1), 631-644.
-4. Heller, S., Herlihy, M., Luchangco, V., Moir, M., Scherer, W. N., & Shavit, N. (2005, December). A lazy concurrent list-based set algorithm. In International Conference On Principles Of Distributed Systems (pp. 3-16). Springer, Berlin, Heidelberg.
-5. https://github.com/urcs-sync/Interval-Based-Reclamation
+3. https://github.com/urcs-sync/Interval-Based-Reclamation
 
 
 

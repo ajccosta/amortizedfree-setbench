@@ -133,7 +133,7 @@ def define_experiment(exp_dict, args):
     for filter_str in filters:
         add_plot_set(
         exp_dict
-        , name='throughput-vs-threads-{}-{}.png'.format('{RECLAIMER_ALGOS}', '{alloc}')
+        , name='throughput-{}-{}.png'.format('{RECLAIMER_ALGOS}', '{alloc}')
         , varying_cols_list=['RECLAIMER_ALGOS', 'alloc']
         , title='Throughput vs thread count'
         , filter=filter_str
@@ -146,7 +146,7 @@ def define_experiment(exp_dict, args):
 
         add_plot_set(
         exp_dict
-        , name='maxresident_mb-vs-threads-{}-{}.png'.format('{RECLAIMER_ALGOS}', '{alloc}')
+        , name='maxresident-{}-{}.png'.format('{RECLAIMER_ALGOS}', '{alloc}')
         , varying_cols_list=['RECLAIMER_ALGOS', 'alloc']
         , title='Max resident size (MB) vs thread count'
         , filter=filter_str

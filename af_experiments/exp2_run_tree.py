@@ -123,7 +123,7 @@ def define_experiment(exp_dict, args):
           , varying_cols_list=['DS_ALGOS','DS_SIZE']
           ,plot_cmd_args='--legend-include --x-title "Reclaimer" --y-title "Throughput (ops/sec)"' )
     
-    add_plot_set(exp_dict, name='memusage-{DS_ALGOS}-u{INS_DEL_HALF}-sz{DS_SIZE}.png', series='type_algo', title='MemUsage Original vs AF implementations'
+    add_plot_set(exp_dict, name='maxresident-{DS_ALGOS}-u{INS_DEL_HALF}-sz{DS_SIZE}.png', series='type_algo', title='maxresident Original vs AF implementations'
           , x_axis='RECLAIMER_ALGOS'
           , y_axis='maxresident_mb'
           , plot_type='bars'
