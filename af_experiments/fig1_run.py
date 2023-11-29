@@ -23,23 +23,23 @@ def define_experiment(exp_dict, args):
     ##     represents the average of precisely as many experimental runs as there are entries in the __trials list.)
     ##
 
-    add_run_param     ( exp_dict, 'alloc', ['jemalloc', 'mimalloc'] ) #['jemalloc', 'tcmalloc', 'hoard', 'mimalloc', 'glibc']
+    add_run_param     ( exp_dict, 'alloc', ['jemalloc'] ) #['jemalloc', 'tcmalloc', 'hoard', 'mimalloc', 'glibc']
     add_run_param     ( exp_dict, 'INS_DEL_HALF'    , [50] )
     add_run_param     ( exp_dict, 'DS_SIZE'          , [20000000] )
     add_run_param     ( exp_dict, 'DS_TYPENAME'     , ['brown_ext_abtree_lf', 'bronson_pext_bst_occ'] )
     add_run_param     (exp_dict, 'RECLAIMER_ALGOS', ['debra', 'none']) 
     add_run_param     ( exp_dict, 'MILLIS_TO_RUN'   , [5000])
     add_run_param     ( exp_dict, 'thread_pinning'  , ['-pin ' + shell_to_str('cd ' + get_dir_tools(exp_dict) + ' ; ./get_pinning_cluster.sh', exit_on_error=True)] )
-    add_run_param     ( exp_dict, '__trials'        , [1, 2, 3] )
+    add_run_param     ( exp_dict, '__trials'        , [1, 2] )
     # add_run_param     ( exp_dict, 'TOTAL_THREADS'   , shell_to_listi('cd ' + get_dir_tools(exp_dict) + ' ; ./get_thread_counts_numa_nodes.sh', exit_on_error=True) )
-    add_run_param     ( exp_dict, 'TOTAL_THREADS'   , [128,144,192] )
+    add_run_param     ( exp_dict, 'TOTAL_THREADS'   , [6, 12, 24, 36, 48, 96, 144,192] )
 
 
     ## i like to have a testing mode (enabled with argument --testing) that runs for less time,
     ##  with fewer parameters (to make sure nothing will blow up before i run for 12 hours...)
     if args.testing:
         add_run_param ( exp_dict, '__trials'        , [1] )
-        add_run_param ( exp_dict, 'TOTAL_THREADS'   , shell_to_listi('cd ' + get_dir_tools(exp_dict) + ' ; ./get_thread_counts_max.sh', exit_on_error=True) )
+        add_run_param ( exp_dict, 'TOTAL_THREADS'   , [24] )
 
     ##
     ## specify how to compile and run your program.
@@ -62,11 +62,11 @@ def define_experiment(exp_dict, args):
 
     if args.testing:
         # set_cmd_run     ( exp_dict, 'LD_PRELOAD=../../../lib/lib{alloc}.so timeout 300 numactl --interleave=all time ./{DS_TYPENAME}.debra -nwork {TOTAL_THREADS} -insdel {INS_DEL_FRAC} -k {MAXKEY} -t 100 {thread_pinning} -rq 0 -rqsize 1 -nrq 0' )
-        set_cmd_run (exp_dict, 'LD_PRELOAD=../../lib/lib{alloc}.so timeout 300 numactl --interleave=all time ./ubench_{DS_TYPENAME}.alloc_new.reclaim_{RECLAIMER_ALGOS}.pool_none.tl.out -nwork {TOTAL_THREADS} -nprefill {TOTAL_THREADS} -i {INS_DEL_HALF} -d {INS_DEL_HALF} -rq 0 -rqsize 1 -k {DS_SIZE} -t 100 {thread_pinning}')        
+        set_cmd_run (exp_dict, 'LD_PRELOAD=../../lib/lib{alloc}.so timeout 300 numactl --interleave=all time ./ubench_{DS_TYPENAME}.alloc_new.reclaim_{RECLAIMER_ALGOS}.pool_none.f1.out -nwork {TOTAL_THREADS} -nprefill {TOTAL_THREADS} -i {INS_DEL_HALF} -d {INS_DEL_HALF} -rq 0 -rqsize 1 -k {DS_SIZE} -t 100 {thread_pinning}')        
     else:
         # set_cmd_run     ( exp_dict, 'LD_PRELOAD=../../../lib/lib{alloc}.so timeout 300 numactl --interleave=all time ./{DS_TYPENAME}.debra -nwork {TOTAL_THREADS} -insdel {INS_DEL_FRAC} -k {MAXKEY} -t {MILLIS_TO_RUN} {thread_pinning} -rq 0 -rqsize 1 -nrq 0' )
 
-        set_cmd_run (exp_dict, 'LD_PRELOAD=../../lib/lib{alloc}.so timeout 300 numactl --interleave=all time ./ubench_{DS_TYPENAME}.alloc_new.reclaim_{RECLAIMER_ALGOS}.pool_none.tl.out -nwork {TOTAL_THREADS} -nprefill {TOTAL_THREADS} -i {INS_DEL_HALF} -d {INS_DEL_HALF} -rq 0 -rqsize 1 -k {DS_SIZE} -t 5000 {thread_pinning}')
+        set_cmd_run (exp_dict, 'LD_PRELOAD=../../lib/lib{alloc}.so timeout 300 numactl --interleave=all time ./ubench_{DS_TYPENAME}.alloc_new.reclaim_{RECLAIMER_ALGOS}.pool_none.f1.out -nwork {TOTAL_THREADS} -nprefill {TOTAL_THREADS} -i {INS_DEL_HALF} -d {INS_DEL_HALF} -rq 0 -rqsize 1 -k {DS_SIZE} -t 5000 {thread_pinning}')
 
     ## pattern for output filenames. note 1: these files will be placed in {__dir_data}/. note 2: filenames cannot contain spaces.
     # set_file_data   ( exp_dict, 'data{__step}.txt' )

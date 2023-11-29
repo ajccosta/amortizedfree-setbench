@@ -126,8 +126,8 @@ def replace_value(value):
     elif value == 'nbrplus':
         return 'nbr+'
 
-    elif value == 'token4':
-        return 'token_af'
+    elif args.x_title != ""  and (value == 'token4' or value == 'token1'):
+        return 'token'
     elif value == 'ibr_rcu_df' or value == 'ibr_rcu':
         return 'rcu'
     elif value == 'qsbr_df':
@@ -139,7 +139,7 @@ def replace_value(value):
 
     elif value == 'he_df':
         return 'he'
-    elif value == 'nbr_df':
+    elif value == 'nbr_df' or value == 'nbr':
         return 'nbr'
     elif value == 'wfe_df':
         return 'wfe'
@@ -153,6 +153,8 @@ def replace_value(value):
         return 'pass_first'
     elif value == 'token3':
         return 'periodic'
+    elif value == 'token4':
+        return 'token_af'
     else:
         return value  # Keep the original value if no condition is met
 

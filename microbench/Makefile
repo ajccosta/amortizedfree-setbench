@@ -133,20 +133,20 @@ $(foreach ds,$(DATA_STRUCTURES),$(foreach alloc,$(ALLOCATORS),$(foreach reclaim,
 #### legacy reclaimer build end
 
 
-#### timeline ppopp23 AE reclaimer build begin. These do not use tools/ and are meant to be used by microbench/experiments folder
+#### FIG1 ppopp23 AE reclaimer build begin. These do not use tools/ and are meant to be used by microbench/experiments folder
 
-DATA_STRUCTURES_TIMELINE=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/bronson_pext*/adapter.h))
-DATA_STRUCTURES_TIMELINE+=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/brown_ext_ab*/adapter.h))
+DATA_STRUCTURES_FIG1=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/bronson_pext*/adapter.h))
+DATA_STRUCTURES_FIG1+=$(patsubst ../ds/%/adapter.h,%,$(wildcard ../ds/brown_ext_ab*/adapter.h))
 
-RECLAIMERS_TL= #ONLY DEBRA with Bronson tree, other reclaimers not supported.
+RECLAIMERS_FIG1= debra none #ONLY DEBRA with Bronson tree, other reclaimers not supported.
 
 define make-timeline-target =
-ubench_$(1).alloc_$(2).reclaim_$(3).pool_$(4).tl.out: dir_guard
-	$(GPP) ./main.cpp -o $(bin_dir)/ubench_$(1).alloc_$(2).reclaim_$(3).pool_$(4).tl.out -I../ds/$1 -DDS_TYPENAME=$(1) -DALLOC_TYPE=$(2) -DRECLAIM_TYPE=$(3) -DPOOL_TYPE=$(4) $(FLAGS) $(LDFLAGS)
-all: ubench_$(1).alloc_$(2).reclaim_$(3).pool_$(4).tl.out
+ubench_$(1).alloc_$(2).reclaim_$(3).pool_$(4).f1.out: dir_guard
+	$(GPP) ./main.cpp -o $(bin_dir)/ubench_$(1).alloc_$(2).reclaim_$(3).pool_$(4).f1.out -I../ds/$1 -DDS_TYPENAME=$(1) -DALLOC_TYPE=$(2) -DRECLAIM_TYPE=$(3) -DPOOL_TYPE=$(4) $(FLAGS) $(LDFLAGS)
+all: ubench_$(1).alloc_$(2).reclaim_$(3).pool_$(4).f1.out
 endef
 
-$(foreach ds,$(DATA_STRUCTURES_TIMELINE),$(foreach alloc,$(ALLOCATORS),$(foreach reclaim,$(RECLAIMERS_TL),$(foreach pool,$(POOLS),$(eval $(call make-timeline-target,$(ds),$(alloc),$(reclaim),$(pool)))))))
+$(foreach ds,$(DATA_STRUCTURES_FIG1),$(foreach alloc,$(ALLOCATORS),$(foreach reclaim,$(RECLAIMERS_FIG1),$(foreach pool,$(POOLS),$(eval $(call make-timeline-target,$(ds),$(alloc),$(reclaim),$(pool)))))))
 
 #### timeline reclaimer build end
 
