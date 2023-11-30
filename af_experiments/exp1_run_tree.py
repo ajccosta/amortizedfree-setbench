@@ -99,7 +99,7 @@ def define_experiment(exp_dict, args):
     add_run_param (exp_dict, 'RECLAIMER_ALGOS', ['nbr','nbrplus','debra','debra_df', 'token4', 'none','2geibr','qsbr', 'ibr_rcu','he','ibr_hp','wfe']) 
     # ['nbr','nbrplus','debra','debra_df', 'token4', 'none','2geibr','qsbr', 'ibr_rcu','he','ibr_hp','wfe']
  
-    add_run_param (exp_dict, '__trials', [1,2]) #[1,2,3]
+    add_run_param (exp_dict, '__trials', [1]) #[1,2,3]
     add_run_param     ( exp_dict, 'thread_pinning'  , ['-pin ' + shell_to_str('cd ' + get_dir_tools(exp_dict) + ' ; ./get_pinning_cluster.sh', exit_on_error=True)] )
     add_run_param    (exp_dict, 'TOTAL_THREADS', [24,48,72,96,120,144,168,192,240]) 
     # [24,48,72,96,120,144,168,192,240]
