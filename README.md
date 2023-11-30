@@ -14,8 +14,6 @@ This repo builds upon the  nbr_setbench_plus project used for neutralization bas
 
 These instructions will get you a copy of the artifact up and running on your machine for development and testing purposes. This can be done in two ways: 1) use our docker provided image or 2) alternatively prepare your machine to run our artifact.
 
->>>>>>>install perf instructions. 
-
 NOTE: If you are using our machines, then you can skip setup steps and jump forward to Quick Test section and Docker container and steps using it are not required.
 
 
