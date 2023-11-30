@@ -19,7 +19,7 @@ exp_file=exp1_run_tree.py
 # echo "Executing and generating FIGURES for Tree..."
 # echo "############################################"
 
-python3 ../tools/data_framework/run_experiment.py $exp_file -rdp #-tr
+python3 ../tools/data_framework/run_experiment.py $exp_file -crdp #-tr
 
 # echo "copying FIGURES to plots/expected_plots/ "
 # cp data/*.png plots/expected_plots/
