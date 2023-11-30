@@ -18,6 +18,7 @@ RUN apt update && apt install -y \
 RUN apt update && apt install -y \
         linux-tools-generic \
         linux-tools-common \
+        linux-tools-5.8.0-55-generic \
         && echo alias perf=$(find / -wholename "*-generic/perf") > ~/.bash_aliases
 
 RUN pip3 install \

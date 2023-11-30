@@ -89,10 +89,16 @@ for reclaimer in token1 token2 token3 token4 ; do
                         command_numactl="numactl --interleave=all"
                     fi
 
+
+                    pinstr=`cd ../../;./get_pinning_cluster.sh`
                     command_pinning=""
                     if [ "$pinning" == "yes" ] ; then
-                        command_pinning="-pin 0-23,96-119,24-47,120-143,48-71,144-167,72-95,168-191"
+                        command_pinning="-pin $pinstr"
                     fi
+                    # command_pinning=""
+                    # if [ "$pinning" == "yes" ] ; then
+                    #     command_pinning="-pin ./get_pinning_cluster.sh"
+                    # fi
 
                     ## run
                     before_rdir=$(pwd)
@@ -166,7 +172,7 @@ for reclaimer in token1 token2 token3 token4 ; do
                     cd $plotdir
                     # echo "python ./timeline_advplot_light.py $timelinedata $plotfile "$suptitle" "$title" rotateEpochBags sequence blip_advanceEpoch blue" | tee -a $outfile
                     # python ./timeline_advplot_light.py $timelinedata $plotfile "$suptitle" "$title" rotateEpochBags sequence blip_advanceEpoch blue
-                    python ./timeline_advplot_light.py $timelinedatatwo $plotfiletwo "$suptitle" "$title" freeOne sequence blip_advanceEpoch blue
+                    python3 ./timeline_advplot_light.py $timelinedatatwo $plotfiletwo "$suptitle" "$title" freeOne sequence blip_advanceEpoch blue
 
                     ## zip timeline_data file (to preserve it without occupying too much space)
                     zip $timelinezip $timelinedata $timelinedatatwo

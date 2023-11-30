@@ -45,7 +45,6 @@ SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 echo "SCRIPTPATH=$SCRIPTPATH"
 export PATH=$SCRIPTPATH/../../../../tools:$SCRIPTPATH:$PATH
 
-
 echo "compiling with debra"
 current_cdir=$(pwd)
 cd $compiledir
@@ -106,9 +105,10 @@ for free in batch ; do #batch amortized
                         command_numactl="numactl --interleave=all"
                     fi
 
+                    pinstr=`cd ../../;./get_pinning_cluster.sh`
                     command_pinning=""
                     if [ "$pinning" == "yes" ] ; then
-                        command_pinning="-pin 0-23,96-119,24-47,120-143,48-71,144-167,72-95,168-191"
+                        command_pinning="-pin $pinstr"
                     fi
 
                     ## run
@@ -169,7 +169,7 @@ for free in batch ; do #batch amortized
 
                         ## plot timeline
                         cd $plotdir
-                        python ./timeline_advplot_light.py $timelinedata $plotfile "$suptitle" "$title" rotateEpochBags sequence blip_advanceEpoch blue
+                        python3 ./timeline_advplot_light.py $timelinedata $plotfile "$suptitle" "$title" rotateEpochBags sequence blip_advanceEpoch blue
 
                         ## zip timeline_data file (to preserve it without occupying too much space)
                         zip $timelinezip $timelinedata

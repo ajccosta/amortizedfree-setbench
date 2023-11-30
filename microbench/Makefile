@@ -62,8 +62,8 @@ endif
 # endif
 
 FLAGS += -DMAX_THREADS_POW2=512
-# FLAGS += -DCPU_FREQ_GHZ=2.1 #$(shell ./experiments/get_cpu_ghz.sh)
-FLAGS += -DCPU_FREQ_GHZ=$(shell ./experiments/get_cpu_ghz.sh)
+FLAGS += -DCPU_FREQ_GHZ=2.1 #$(shell ./experiments/get_cpu_ghz.sh)
+# FLAGS += -DCPU_FREQ_GHZ=$(shell ./experiments/get_cpu_ghz.sh)
 FLAGS += -DMEMORY_STATS=if\(1\) -DMEMORY_STATS2=if\(0\)
 FLAGS += -std=c++17 -mcx16 -fconcepts # to avoid auto in parameter declaration warning #-gdwarf # AJNOTE: used c++17 for exp1-2
 # FLAGS += -DLLISTDS
