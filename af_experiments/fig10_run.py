@@ -30,7 +30,7 @@ def define_experiment(exp_dict, args):
     add_run_param     (exp_dict, 'RECLAIMER_ALGOS', ['token1', 'token2', 'token3', 'token4']) 
     add_run_param     ( exp_dict, 'MILLIS_TO_RUN'   , [5000])
     add_run_param     ( exp_dict, 'thread_pinning'  , ['-pin ' + shell_to_str('cd ' + get_dir_tools(exp_dict) + ' ; ./get_pinning_cluster.sh', exit_on_error=True)] )
-    add_run_param     ( exp_dict, '__trials'        , [1] )
+    add_run_param     ( exp_dict, '__trials'        , [1,2] )
     # add_run_param     ( exp_dict, 'TOTAL_THREADS'   , shell_to_listi('cd ' + get_dir_tools(exp_dict) + ' ; ./get_thread_counts_numa_nodes.sh', exit_on_error=True) )
     add_run_param     ( exp_dict, 'TOTAL_THREADS'   , [24, 48, 96,144,192] )
 

@@ -96,12 +96,12 @@ def define_experiment(exp_dict, args):
     # print("DS name=", dsname)
 
     add_run_param (exp_dict, 'DS_ALGOS', ['brown_ext_abtree_lf']) #['brown_ext_abtree_lf', 'guerraoui_ext_bst_ticket']
-    add_run_param (exp_dict, 'RECLAIMER_ALGOS', ['debra_df', 'token4']) 
+    add_run_param (exp_dict, 'RECLAIMER_ALGOS', ['nbr','nbrplus','debra','debra_df', 'token4', 'none','2geibr','qsbr', 'ibr_rcu','he','ibr_hp','wfe']) 
     # ['nbr','nbrplus','debra','debra_df', 'token4', 'none','2geibr','qsbr', 'ibr_rcu','he','ibr_hp','wfe']
  
-    add_run_param (exp_dict, '__trials', [1]) #[1,2,3]
+    add_run_param (exp_dict, '__trials', [1,2]) #[1,2,3]
     add_run_param     ( exp_dict, 'thread_pinning'  , ['-pin ' + shell_to_str('cd ' + get_dir_tools(exp_dict) + ' ; ./get_pinning_cluster.sh', exit_on_error=True)] )
-    add_run_param    (exp_dict, 'TOTAL_THREADS', [144,192,240]) 
+    add_run_param    (exp_dict, 'TOTAL_THREADS', [24,48,72,96,120,144,168,192,240]) 
     # [24,48,72,96,120,144,168,192,240]
     # [1,2,4,8,16,32,48,72,96,120,144,168,192,216,240,264,512]
     # add_run_param     ( exp_dict, 'TOTAL_THREADS'   , [1] + shell_to_listi('cd ' + get_dir_tools(exp_dict) + ' ; ./get_thread_counts_numa_nodes.sh', exit_on_error=True) )
