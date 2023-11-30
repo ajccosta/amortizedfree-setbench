@@ -437,6 +437,8 @@ public:
 #ifdef DEAMORTIZE_FREE_CALLS
             threadData[tid].deamortizedFreeables = NULL;
 #endif
+
+        COUTATOMIC("type_algo : ORIG"<<std::endl);
         }
     }
     ~reclaimer_token1() {
