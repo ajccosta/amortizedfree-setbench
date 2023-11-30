@@ -35,7 +35,18 @@ export PATH=$SCRIPTPATH/../../../../tools:$SCRIPTPATH:$PATH
 ## run experiments across all parameter combinations
 ##
 
-for reclaimer in token1 token2 token3 token4 ; do
+for reclaimer in token1 token2 token3 token4; do #token1 token2 token3 token4
+
+    # current_cdir=$(pwd)
+    # cd $compiledir
+    # echo "compiling with ${reclaimer}"
+    # ./compile.sh use_timelines=1 xargs='-D___MIN_INTERVAL_DURATION=0.1' has_libpapi=0 > token4_compile.log
+    # if [ "$?" -ne "0" ]; then
+    #     echo "ERROR COMPILING"
+    #     exit 1
+    # fi
+    # cd "$current_cdir"
+
     # compile required executables
     if [ "$reclaimer" == "token4" ] ; then
         current_cdir=$(pwd)
@@ -171,8 +182,13 @@ for reclaimer in token1 token2 token3 token4 ; do
                     ## plot timeline
                     cd $plotdir
                     # echo "python ./timeline_advplot_light.py $timelinedata $plotfile "$suptitle" "$title" rotateEpochBags sequence blip_advanceEpoch blue" | tee -a $outfile
-                    # python ./timeline_advplot_light.py $timelinedata $plotfile "$suptitle" "$title" rotateEpochBags sequence blip_advanceEpoch blue
-                    python3 ./timeline_advplot_light.py $timelinedatatwo $plotfiletwo "$suptitle" "$title" freeOne sequence blip_advanceEpoch blue
+                    # python3 ./timeline_advplot_light.py $timelinedata $plotfile "$suptitle" "$title" rotateEpochBags sequence blip_advanceEpoch blue
+                    
+                    if [ "$reclaimer" == "token4" ] ; then
+                        python3 ./timeline_advplot_light.py $timelinedatatwo $plotfiletwo "$suptitle" "$title" freeOne sequence blip_advanceEpoch blue
+                    else
+                        python3 ./timeline_advplot_light.py $timelinedata $plotfile "$suptitle" "$title" rotateEpochBags sequence blip_advanceEpoch blue
+                    fi
 
                     ## zip timeline_data file (to preserve it without occupying too much space)
                     zip $timelinezip $timelinedata $timelinedatatwo

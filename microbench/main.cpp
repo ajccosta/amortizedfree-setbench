@@ -1069,7 +1069,7 @@ void printOutput(auto g) {
     COUTATOMIC("napping milliseconds overtime : "<<g->elapsedMillisNapping<<std::endl);
     COUTATOMIC(std::endl);
 
-//    g->dsAdapter->printSummary();
+   g->dsAdapter->printSummary();
 
     // free ds
 #if !defined NO_CLEANUP_AFTER_WORKLOAD

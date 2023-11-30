@@ -1,23 +1,4 @@
 /**
- * This is a variant of token EBR described in reclaimer_token1.h
- * Copyright (C) 2023 Trevor Brown
- */
-
-// #pragma once
-
-// #if !defined vtoken4
-// #   define vtoken4
-// #endif
-// #include "reclaimer_token1.h"
-
-// template <typename T = void, class Pool = pool_interface<T> >
-// class reclaimer_token4 : public reclaimer_token1<T, Pool> {
-//     reclaimer_token4(const int numProcesses, Pool *_pool, debugInfo * const _debug, RecoveryMgr<void *> * const _recoveryMgr = NULL)
-//             : reclaimer_token1<T, Pool>(numProcesses, _pool, _debug, _recoveryMgr) {}
-// };
-
-
-/**
  * This file implements four different variants of EBR using token passing.
  * These implementations are conceptually part of Daewoo Kim's thesis.
  *
@@ -69,9 +50,25 @@
 #pragma once
 
 // #if !defined(vtoken1) && !defined(vtoken2) && !defined(vtoken3) && !defined(vtoken4)
-// #   define vtoken1
-// // #   pragma message "defaulting to reclaimer_token1"
-// // #   warning defaulting to reclaimer_token1
+#   define vtoken4
+// #   pragma message "defaulting to reclaimer_token4"
+// #   warning defaulting to reclaimer_token4
+// #endif
+
+// #pragma message "RECLAIM_TYPE=" STR(RECLAIM_TYPE)
+
+// #if defined vtoken1
+// #   pragma message "using reclaimer_token4"
+// // #   warning using reclaimer_token4
+// #elif defined vtoken2
+// #   pragma message "using reclaimer_token2"
+// // #   warning using reclaimer_token2
+// #elif defined vtoken3
+// #   pragma message "using reclaimer_token3"
+// // #   warning using reclaimer_token3
+// #elif defined vtoken4
+// #   pragma message "using reclaimer_token4"
+// // #   warning using reclaimer_token4
 // #endif
 
 #include <atomic>
@@ -92,9 +89,8 @@ class reclaimer_token4 : public reclaimer_interface<T, Pool> {
 protected:
 
 /*Check and free one object on every operation - by Daewoo*/
-#define vtoken4
 // #if defined vtoken4
-//     #define DEAMORTIZE_FREE_CALLS
+// #   define DEAMORTIZE_FREE_CALLS
 // #endif
 
 #ifdef RAPID_RECLAMATION
@@ -204,33 +200,33 @@ public:
     // rotate the epoch bags and reclaim any objects retired two epochs ago.
     inline void rotateEpochBags(const int tid) {
         blockbag<T> * const freeable = threadData[tid].last;
-#ifdef GSTATS_HANDLE_STATS_DELME
-        GSTATS_APPEND(tid, limbo_reclamation_event_size, freeable->computeSize());
-        //@J GSTATS_ADD(tid, limbo_reclamation_event_count, 1);
-        GSTATS_ADD(tid, /* limbo_reclamation_event_count @J */ num_reclaimed_in_events, 1);
-
+        auto freeableSize = freeable->computeSize();
+#ifdef GSTATS_HANDLE_STATS
+        GSTATS_APPEND(tid, limbo_reclamation_event_size, freeableSize);
+        GSTATS_ADD(tid, limbo_reclamation_event_count, 1);
         TIMELINE_START(tid);
 #endif
 
-        // int numLeftover = 0;
+        int numLeftover = 0;
 #ifdef DEAMORTIZE_FREE_CALLS
         auto freelist = threadData[tid].deamortizedFreeables;
-        // if (!freelist->isEmpty()) {
-        //     numLeftover += (freelist->isEmpty()
-        //             ? 0
-        //             : (freelist->getSizeInBlocks()-1)*BLOCK_SIZE + freelist->getHeadSize());
+        if (!freelist->isEmpty()) {
+            numLeftover += (freelist->isEmpty()
+                    ? 0
+                    : (freelist->getSizeInBlocks()-1)*BLOCK_SIZE + freelist->getHeadSize());
 
-        //     // // "CATCH-UP" bulk free
-        //     // this->pool->addMoveFullBlocks(tid, freelist);
-        // }
+            // // "CATCH-UP" bulk free
+            // this->pool->addMoveFullBlocks(tid, freelist);
+        }
         // TIMELINE_BLIP_Llu(tid, "numFreesPerStartOp", threadData[tid].numFreesPerStartOp);
         freelist->appendMoveFullBlocks(freeable);
         GSTATS_SET_IX(tid, garbage_in_epoch, freelist->computeSizeFast() + getSizeInNodesForThisThread(tid), threadData[tid].tokenCount);
 #else
         GSTATS_SET_IX(tid, garbage_in_epoch, getSizeInNodesForThisThread(tid), threadData[tid].tokenCount);
+        GSTATS_ADD(tid, limbo_object_frees, freeableSize);
         this->pool->addMoveFullBlocks(tid, freeable); // moves any full blocks (may leave a non-full block behind)
 
-// #if defined vtoken3
+// #   if defined vtoken3
 //         /*passing token even though it is still freeing objects - by Daewoo*/
 //         int regular_tokenCheck = 0;
 //         T* ptr;
@@ -241,15 +237,13 @@ public:
 //                     // pass token
 //                     threadData[tid].token = 0;
 //                     threadData[(tid+1) % this->NUM_PROCESSES].token = 1;
-// #ifdef GSTATS_HANDLE_STATS_DELME
+// #                   ifdef GSTATS_HANDLE_STATS
 //                         // let's say whenever thread 0 receives the token a new epoch has started...
-//         #ifdef AJDISABLED_INMEM_Llu_STATS
 //                         if (tid == 0) {
 //                             // record a timeline blip for the new epoch
 //                             TIMELINE_BLIP_INMEM_Llu(tid, blip_advanceEpoch, threadData[tid].tokenCount);
 //                         }
-//         #endif // AJDISABLED_INMEM_Llu_STATS
-// #endif
+// #                   endif
 //                 }
 //                 regular_tokenCheck = 0;
 //             }
@@ -257,16 +251,14 @@ public:
 //             this->pool->add(tid, ptr);
 //             ++regular_tokenCheck;
 //         }
-// #endif
+// #   endif
 
 #endif
         SOFTWARE_BARRIER;
 
-#ifdef AJDISABLED_INMEM_Llu_STATS
-#ifdef GSTATS_HANDLE_STATS_DELME
+#ifdef GSTATS_HANDLE_STATS
         TIMELINE_END_INMEM_Llu(tid, timeline_rotateEpochBags, threadData[tid].tokenCount);
 #endif
-#endif // AJDISABLED_INMEM_Llu_STATS
 
         // swap curr and last
         threadData[tid].last = threadData[tid].curr;
@@ -300,12 +292,11 @@ public:
 
         bool result = false;
         if (threadData[tid].token) {
-// #if defined GSTATS_HANDLE_STATS_DELME
+// #if defined GSTATS_HANDLE_STATS
 //             GSTATS_APPEND(tid, token_received_time_split_ms, GSTATS_TIMER_SPLIT(tid, timersplit_token_received)/1000000);
 //             GSTATS_SET_IX(tid, token_received_time_last_ms, GSTATS_TIMER_ELAPSED(tid, timer_bag_rotation_start)/1000000, 0);
 // #endif
 // #if defined vtoken1
-//             assert(0 && "this is not token1");
 //             BagRotator<First, Rest...> rotator;
 //             rotator.rotateAllEpochBags(tid, reclaimers, 0);
 // #endif
@@ -319,16 +310,14 @@ public:
             //__sync_synchronize();
 
 #ifdef GSTATS_HANDLE_STATS
-// #ifdef AJDISABLED_INMEM_Llu_STATS
             // let's say whenever thread 0 receives the token a new epoch has started...
             if (tid == 0) {
                 // record a timeline blip for the new epoch
                 TIMELINE_BLIP_INMEM_Llu(tid, blip_advanceEpoch, threadData[tid].tokenCount);
             }
-// #endif // AJDISABLED_INMEM_Llu_STATS
 #endif
 
-// #if defined GSTATS_HANDLE_STATS_DELME
+// #if defined GSTATS_HANDLE_STATS
 //             auto startTime = GSTATS_TIMER_ELAPSED(tid, timer_bag_rotation_start)/1000;
 //             GSTATS_APPEND(tid, bag_rotation_start_time_us, startTime);
 //             GSTATS_APPEND(tid, bag_rotation_reclaim_size, threadData[tid].last->computeSize());
@@ -347,7 +336,7 @@ public:
                 result = true;
             //}
 
-// #if defined GSTATS_HANDLE_STATS_DELME
+// #if defined GSTATS_HANDLE_STATS
 //             auto endTime = GSTATS_TIMER_ELAPSED(tid, timer_bag_rotation_start)/1000;
 //             GSTATS_APPEND(tid, bag_rotation_end_time_us, endTime);
 //             GSTATS_APPEND(tid, bag_rotation_duration_split_ms, (endTime - startTime)/1000);
@@ -359,6 +348,7 @@ public:
 
     if (!threadData[tid].deamortizedFreeables->isEmpty()) {
         this->pool->add(tid, threadData[tid].deamortizedFreeables->remove());
+        GSTATS_ADD(tid, limbo_object_frees, 1);
     }
     // if (!threadData[tid].deamortizedFreeables->isEmpty()) {
     //     this->pool->add(tid, threadData[tid].deamortizedFreeables->remove());
@@ -389,7 +379,7 @@ public:
 //        std::cout<<"token_counts_tid"<<tid<<"="<<threadData[tid].tokenCount<<std::endl;
 //        std::cout<<"bag_curr_size_tid"<<tid<<"="<<threadData[tid].curr->computeSize()<<std::endl;
 //        std::cout<<"bag_last_size_tid"<<tid<<"="<<threadData[tid].last->computeSize()<<std::endl;
-// #if defined GSTATS_HANDLE_STATS_DELME
+// #if defined GSTATS_HANDLE_STATS
 //         GSTATS_APPEND(tid, bag_curr_size, threadData[tid].curr->computeSize());
 //         GSTATS_APPEND(tid, bag_last_size, threadData[tid].last->computeSize());
 //         GSTATS_APPEND(tid, token_counts, threadData[tid].tokenCount);
@@ -410,7 +400,7 @@ public:
         threadData[tid].deamortizedFreeables = new blockbag<T>(tid, this->pool->blockpools[tid]);
         threadData[tid].numFreesPerStartOp = 1;
 #endif
-#ifdef GSTATS_HANDLE_STATS_DELME
+#ifdef GSTATS_HANDLE_STATS
         GSTATS_CLEAR_TIMERS;
 #endif
     }
@@ -448,7 +438,6 @@ public:
             threadData[tid].deamortizedFreeables = NULL;
 #endif
         }
-        COUTATOMIC("type_algo : AF"<<std::endl);
     }
     ~reclaimer_token4() {
 //        VERBOSE DEBUG std::cout<<"destructor reclaimer_token4"<<std::endl;

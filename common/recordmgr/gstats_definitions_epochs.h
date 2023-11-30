@@ -63,7 +63,7 @@
         gstats_handle_stat(LONG_LONG, thread_announced_epoch, 1, { \
                 gstats_output_item(PRINT_RAW, FIRST, BY_THREAD) \
         }) \
-        gstats_handle_stat(LONG_LONG, garbage_in_epoch, 1, {})
+        gstats_handle_stat(LONG_LONG, garbage_in_epoch, 1000, {})
 #endif
 
     // define a variable for each stat above
