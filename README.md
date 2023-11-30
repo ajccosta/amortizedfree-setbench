@@ -247,11 +247,11 @@ To generate token algorithms related timeline graphs:
 
     - generated graphs would be found in tokens/data whihc are generated for abtree at 192 threads and jemalloc for each token variant.
     
-    - Fig 6 (upper) depicting  timeline for batch freeing is shown by freeOne_token1_jemalloc_192_interleave_pinyes.png and (lower)depicting number of grabage nodes is shown by unreclaimed_token1_jemalloc_192_interleave_pinyes.png for token1 (Naive Token EBR)
+    - Fig 6 (upper) depicting  timeline for batch freeing is shown by freetime_token1_jemalloc_192_interleave_pinyes.png and (lower)depicting number of grabage nodes is shown by unreclaimed_token1_jemalloc_192_interleave_pinyes.png for token1 (Naive Token EBR)
 
-    - Fig 7 (upper) depicting  timeline for batch freeing is shown by freeOne_token2_jemalloc_192_interleave_pinyes.png and (lower)depicting number of grabage nodes is shown by unreclaimed_token2_jemalloc_192_interleave_pinyes.png for token2 (Pass-First Token EBR)
+    - Fig 7 (upper) depicting  timeline for batch freeing is shown by freetime_token2_jemalloc_192_interleave_pinyes.png and (lower)depicting number of grabage nodes is shown by unreclaimed_token2_jemalloc_192_interleave_pinyes.png for token2 (Pass-First Token EBR)
 
-    - Fig 8 (upper) depicting  timeline for batch freeing is shown by freeOne_token3_jemalloc_192_interleave_pinyes.png and (lower)depicting number of grabage nodes is shown by unreclaimed_token3_jemalloc_192_interleave_pinyes.png for token3 (Periodic Token EBR)
+    - Fig 8 (upper) depicting  timeline for batch freeing is shown by freetime_token3_jemalloc_192_interleave_pinyes.png and (lower)depicting number of grabage nodes is shown by unreclaimed_token3_jemalloc_192_interleave_pinyes.png for token3 (Periodic Token EBR)
 
     - Fig 9 (upper) depicting  timeline for batch freeing is shown by freeOne_token4_jemalloc_192_interleave_pinyes.png and (lower)depicting number of grabage nodes is shown by unreclaimed_token4_jemalloc_192_interleave_pinyes.png for token4 (Amortized-Free Token EBR)
     
