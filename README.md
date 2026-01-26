@@ -4,7 +4,7 @@ The experiments we run for the paper are of two kinds:
 1. [TYPE1] Performance and peak memory usage experiments.
           - These experiements are run from directory: amortizedfree-setbench/af_experiments
 2. [TYPE2] Timeline graph experiments
-          - These experiments are run from directory: amortizedfree-setbench/microbench/experiments/timelines/
+          - These experiments are run from directory: amortizedfree-setbench/ebrtimelines/microbench/experiments/timelines/
 
 #CREDITS:
 This repo builds upon the  nbr_setbench_plus project used for neutralization based reclamation techniques, which in turn used the original [setbench](https://gitlab.com/trbot86/setbench) of [Multicore Lab](https://mc.uwaterloo.ca/) headed by Prof. Trevor Brown to test and evaluate lockfree data structures and reclamation algorithms.
@@ -104,6 +104,38 @@ This compiles the benchmark and run quick trials for all the experiments on a su
 
 **WARNING:** If you run "ps -aH | grep htop" and you see a bunch of htop processes, scaling at 192 threads may be affected (as a sanity check, run htop and see if you see any frequent spikes of activity on various individual cpus)
 
+#### How to change default run parameters?:
+
+In amoritzedfree-setbench/af_experiments directory, the python scripts exp1_run_tree.py, exp2_run_tree.py, fig1_run.py, fig10_run.py have define_experiment() method wherein following named run parameters are declared.
+Within these python scripts one can change their values.
+
+- RECLAIMER_ALGOS: To provide any of the reclamatin algorithms supported by the benchmark
+- __trials : To specify number of times a trial shoud repeat
+- TOTAL_THREADS : To specify number of threads a trial should be run 
+- INS_DEL_HALF: To specify the workload type (fraction of inserts deletes)
+- DS_SIZE : To specify the maximum size of a data structure
+- DS_TYPENAME: To specify one of the supported data structures
+
+In amoritzedfree-setbench/ebrtimelines/microbench/experiments/timelines/debra directory, run_bf_threads.sh and run_bf_vs_af.sh have the number of threads as parameters.
+
+-  At line 70 in run_bf_threads.sh, change the default number (96 192 on 192 core machine) to the number of cores your machine has.
+-  At line 70 and 116 in run_bf_vs_af.sh, change the default number (192 on 192 core machine) to the number of cores your machine has.
+
+In amoritzedfree-setbench/ebrtimelines/microbench/experiments/timelines/tokens directory, run.sh has the number of threads as parameters.
+
+-  At line 69 in run.sh, change the default number (192 on 192 core machine) to the number of cores your machine has.
+
+### Run all Experiments:
+You can run all experiments (both TYPE1 and TYPE2 below) by running a sinlge script. If you would like to run experiments step by step, you can skip this and move to TYPE1 Experiments.
+
+* *step1*. Assuming you are currently in amortizedfree-setbench, execute the following command:
+
+    ```~$ ./run_all.sh```
+
+* *step2*. Generated graphs can be found in the following path:
+
+    - amortizedfree-setbench/plots/generated_plots
+
 ### TYPE1 Experiments:
 TYPE1 experiments refer to all the experiments reported in paper that correspond to measuring performance and peak memory usage. This includes experiments correponding to Figure 11a, b, Figure 1 and Figure 10 in the paper.
 
@@ -117,7 +149,7 @@ TYPE1 experiments refer to all the experiments reported in paper that correspond
 
     - This by default compiles, runs and produces plots similar to the experiment in Fig 11 a of the paper that compares throughput of amortized free token-EBR (token_af in paper and token4 in code) with other reclaimation algorithms.  
     
-    - generated graphs can be found in  af_experiments/plots/plot_data_exp1
+    - generated graphs can be found in amortizedfree-setbench/plots/generated_plots/plot_Fig11a
 
 * *step3*. Run the following script to run experiment similar to Fig 11 b: 
 
@@ -125,7 +157,7 @@ TYPE1 experiments refer to all the experiments reported in paper that correspond
 
     - This by default compiles, runs and produces plots similar to the experiment in Fig 11 b of the paper that compares throughput of each reclamation algorithm with its amortized free version.  
 
-    - generated graphs can be found in  af_experiments/plots/plot_data_exp2
+    - generated graphs can be found in  amortizedfree-setbench/plots/generated_plots/plot_Fig11b
 
 * *step4*. Run the following script to run experiment similar to Fig 1: 
 
@@ -133,7 +165,7 @@ TYPE1 experiments refer to all the experiments reported in paper that correspond
 
     - This by default compiles, runs and produces plots similar to the experiment in Fig 1 of the paper that compares throughput and peak memory usage of  DEBRA and leaky implementation of two popular trees.
 
-    - generated graphs can be found in  af_experiments/plots/plot_data_fig1
+    - generated graphs can be found in amortizedfree-setbench/plots/generated_plots/plot_Fig1
 
 * *step5*. Run the following script to run experiment similar to Fig 10: 
 
@@ -141,46 +173,34 @@ TYPE1 experiments refer to all the experiments reported in paper that correspond
 
     - This by default compiles, runs and produces plots similar to the experiment in Fig 10 of the paper that compares throughput of each variant of the proposed token algorithm, namely naive token(token1 in code), pass first token(token2 in code), periodic token(token3 in code) and amortized token(token4 in code).
 
-    - generated graphs can be found in  af_experiments/plots/plot_data_fig10
+    - generated graphs can be found in amortizedfree-setbench/plots/generated_plots/plot_Fig10
 
 All the above bash scripts execute python scripts (namely, exp1_run_tree.py, exp2_run_tree.py, fig1_run.py, fig10_run.py) that sets up the experiment, runs the trials and generates plots similar to those in paper.
-The plots are generated in a subfolder within af_experiments/plots whose names is self explanatory. 
+The plots are generated in amortizedfree-setbench/plots/generated_plots whose names is self explanatory. 
 
 It is possible to run the experiments with run parameters other than those used in the paper (also set as defaults in scripts).
 
-#### [Optional] How to change default run parameters?:
-
-The python scripts exp1_run_tree.py, exp2_run_tree.py, fig1_run.py, fig10_run.py have define_experiment() method wherein following named run parametrs are declared.
-Within these python scripts one can change their values.
-
-- RECLAIMER_ALGOS: To provide any of the reclamatin algorithms supported by the benchmark
-- __trials : To specify number of times a trial shoud repeat
--  TOTAL_THREADS : To specify number threads a trial should be run 
-- INS_DEL_HALF: To specify the workload type (fraction of inserts deletes)
--  DS_SIZE : To specify the maximum size of a data structure
-- DS_TYPENAME: To specify one of the supported data structures
-
 #### ⛏️ Analyze generated figures:
-If you are using the docker container, then copy the generated plots from the af_experiments/plots/expected_plots folder to your current directory.
+If you are using the docker container, then copy the generated plots from the amortizedfree-setbench/plots/generated_plots folder to your current directory.
 
-    ```~$ sudo docker cp amortizedfree:/amortizedfree-setbench/af_experiments/plots/ .```
+    ```~$ sudo docker cp amortizedfree:/amortizedfree-setbench/plots/generated_plots/ .```
 
 * Verify the name of the docker container. Use the following command which would give us the name of the loaded docker container under NAMES column which is 'amortizedfree'.
 
     ```~$ sudo docker container ls```
 
-Now, you can analyse the generated plots and compare them with the expected plots (in af_experiments/plots/expected_plots/) assuming you have access to similar hardware.
+Now, you can analyse the generated plots and compare them with the expected plots (in amortizedfree-setbench/plots/expected_plots/) assuming you have access to similar hardware.
 
-Once the above tests completes the resultant figures could be found in af_experiments/plots/. All plots follow the naming convention mentioned in the quick test section.
+Once the above tests completes the resultant figures could be found in amortizedfree-setbench/plots/generated_plots/. All plots follow the naming convention mentioned in the quick test section.
 
-graphs in af_experiments/plots/plot_data_exp1 (fig 11 a, 11 b) use jemalloc allocator and have the following naming convention:
+graphs in amortizedfree-setbench/plots/generated_plots/plot_Fig11a and plot_Fig11b (fig 11 a, 11 b) use jemalloc allocator and have the following naming convention:
   - throughput-[dsname]-u[updatefraction]-sz[DS_size].png 
     For example, throughput-brown_ext_abtree_lf-u50-sz20000000.png represented throughput graph for ABTree with updates- 50%inserts and 50% deletes- and abtree size 20M nodes.
 
   - maxresident-[dsname]-u[updatefraction]-sz[DS_size].png
     For example, maxresident-brown_ext_abtree_lf-u50-sz20000000.png represented peak mmeory usage graph for ABTree with updates- 50%inserts and 50% deletes- and abtree size 20M nodes.
 
-graphs in af_experiments/plots/plot_data_exp1 (fig 1 and 10) use ABtree data structure with 20M nodes and have the following naming convention:
+graphs in amortizedfree-setbench/plots/generated_plots/plot_Fig1 and plot_Fig10 (fig 1 and 10) use ABtree data structure with 20M nodes and have the following naming convention:
   - throughput-[reclaimer]-[allocator].png 
     For example, throughput-debra-jemalloc.png represented throughput graph for ABTree with updates- 50%inserts and 50% deletes- and abtree size 20M nodes and jemalloc allocaor.
 
@@ -200,10 +220,10 @@ graphs in af_experiments/plots/plot_data_exp1 (fig 1 and 10) use ABtree data str
 
 #### 🎉 Claims from the paper supported by the artifact:
 - *claim 1*. Amortized-free Token-EBR (token4 in code) is faster than other reclamation algorithms considered in the paper.
-  - please check throughput plots in af_experiments/plots/plot_data_exp1.
+  - please check throughput plots in amortizedfree-setbench/plots/generated_plots/plot_Fig11a
 
 - *claim 2*. The amortized freeing significantly improves the performance of majority of the state of the art relciamers.
-  - please check af_experiments/plots/plot_data_exp2
+  - please check amortizedfree-setbench/plots/generated_plots/plot_Fig11b
 
 ### TYPE2 Experiments:
 
@@ -211,13 +231,13 @@ TYPE2 experiments refer to all the experiments reported in paper that correspond
 
 * *step1*. Assuming you are currently in amortizedfree-setbench, execute the following command to run DEBRA related timeline experiments:
 
-    ```~$ cd microbench/experiments/timelines/debra```.
+    ```~$ cd ebrtimelines/microbench/experiments/timelines/debra```.
 
 * *step2*. Run the following script to run experiment similar to Fig 2: 
 
     ```~$ ./run_bf_threads.sh```
 
-    - This by default compiles, runs and produces plots (in debra/data/) similar to the experiment in Fig 2 of the paper that compares time spent freeing batches of retired nodes for DEBRA when used with ABtree and jemalloc at 96 and 192 threads.  
+    - This by default compiles, runs and produces plots (in amortizedfree-setbench/plots/generated_plots/plot_Fig2/) similar to the experiment in Fig 2 of the paper that compares time spent freeing batches of retired nodes for DEBRA when used with ABtree and jemalloc at 96 and 192 threads.  
     
     - generated graphs freetime_batch_jemalloc_96_interleave_pinyes.png shows timeline for 96 threads and 
     and freetime_batch_jemalloc_192_interleave_pinyes.png shows timeline for 192 threads
@@ -227,9 +247,9 @@ TYPE2 experiments refer to all the experiments reported in paper that correspond
 
     ```~$ ./run_bf_vs_af.sh```
 
-    - This by default compiles, runs and produces plots similar to the experiment in Fig 3 of the paper that compares time spent by individual free calls at 192 threads for original DEBRA(batch free, freeOne_batch_jemalloc_192_interleave_pinyes.png) and amortized DEBRA (amortized free, freeOne_amortized_jemalloc_192_interleave_pinyes.png) for ABtree using jemalloc.  
+    - This by default compiles, runs and produces plots (in amortizedfree-setbench/plots/generated_plots/plot_Fig3,4/) similar to the experiment in Fig 3 of the paper that compares time spent by individual free calls at 192 threads for original DEBRA(batch free, freeOne_batch_jemalloc_192_interleave_pinyes.png) and amortized DEBRA (amortized free, freeOne_amortized_jemalloc_192_interleave_pinyes.png) for ABtree using jemalloc.  
     
-    - Additionally it also produces plots (in debra/data/) similar to the experiment in Fig 4 of the paper that number of garbage nodes in each epoch for batch free (upper, unreclaimed_batch_jemalloc_192_interleave_pinyes.png) and amortized free (lower, unreclaimed_amortized_jemalloc_192_interleave_pinyes.png) for DEBRA when used with ABtree and jemalloc at 192 threads.  
+    - Additionally it also produces plots (in amortizedfree-setbench/plots/generated_plots/plot_Fig3,4/) similar to the experiment in Fig 4 of the paper that number of garbage nodes in each epoch for batch free (upper, unreclaimed_batch_jemalloc_192_interleave_pinyes.png) and amortized free (lower, unreclaimed_amortized_jemalloc_192_interleave_pinyes.png) for DEBRA when used with ABtree and jemalloc at 192 threads.  
 
 If you are in docker machine the generated graphs can be copied in the way as described above.
 
@@ -237,15 +257,15 @@ To generate token algorithms related timeline graphs:
 
 * *step1*. Assuming you are currently in amortizedfree-setbench, execute the following command to run TOKEN related timeline experiments:
 
-    ```~$ cd microbench/experiments/timelines/tokens```.
+    ```~$ cd ebrtimelines/microbench/experiments/timelines/tokens```.
 
 * *step2*. Run the following script to run experiment similar to Fig 6,7,8,9: 
 
     ```~$ ./run.sh```
 
-    - This by default compiles, runs and produces plots (in debra/data/) similar to the experiment in Fig 6,7,8,9 of the paper that compares time spent freeing batches of retired nodes for all 4 variants of token algorithms when used with ABtree and jemalloc at 192 threads.  
+    - This by default compiles, runs and produces plots (in amortizedfree-setbench/plots/generated_plots/plot_Fig6,7,8,9/) similar to the experiment in Fig 6,7,8,9 of the paper that compares time spent freeing batches of retired nodes for all 4 variants of token algorithms when used with ABtree and jemalloc at 192 threads.  
 
-    - generated graphs would be found in tokens/data whihc are generated for abtree at 192 threads and jemalloc for each token variant.
+    - Generated graphs would be found in amortizedfree-setbench/plots/generated_plots/plot_Fig6,7,8,9 which are generated for abtree at 192 threads and jemalloc for each token variant.
     
     - Fig 6 (upper) depicting  timeline for batch freeing is shown by freetime_token1_jemalloc_192_interleave_pinyes.png and (lower)depicting number of grabage nodes is shown by unreclaimed_token1_jemalloc_192_interleave_pinyes.png for token1 (Naive Token EBR)
 

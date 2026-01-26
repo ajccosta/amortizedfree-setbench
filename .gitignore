@@ -10,3 +10,5 @@
 microbench/bin/*.*
 
 tools/data_framework/__pycache__/*.*
+
+amortizedfree_docker.tar.gz

@@ -9,6 +9,6 @@ python3 ../tools/data_framework/run_experiment.py $exp_file -crdp #-tr
 
 # echo "copying FIGURES to plots/expected_plots/ "
 # cp data/*.png plots/expected_plots/
-mkdir plots/plot_$data_dir
-echo "copying FIGURES to plots/plot_$data_dir/ "
-cp $data_dir/*.png plots/plot_$data_dir/
+mkdir ../plots/generated_plots/plot_Fig1
+echo "copying FIGURES to plots/generated_plots/plot_Fig1/ "
+cp $data_dir/*.png ../plots/generated_plots/plot_Fig1/
