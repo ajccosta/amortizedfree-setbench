@@ -107,6 +107,7 @@ public:
 		while(true){
 			ret = obj.load(std::memory_order_acquire);
 			realptr = (T*)((size_t)ret & 0xfffffffffffffffc);
+			__builtin_prefetch(realptr);
 			reserve(realptr, idx, tid);
 			if(ret == obj.load(std::memory_order_acquire)){
 				return ret;
@@ -211,12 +212,19 @@ public:
         return true;
     }
 
+    inline double get_int_env(const char* name, int default_value) {
+        if (const char* env = std::getenv(name)) {
+            return std::strtol(env, nullptr, 10);
+        }
+        return default_value;
+    }
+
     reclaimer_ibr_hp(const int numProcesses, Pool *_pool, debugInfo *const _debug, RecoveryMgr<void *> *const _recoveryMgr = NULL)
         : reclaimer_interface<T, Pool>(numProcesses, _pool, _debug, _recoveryMgr)
     {
         VERBOSE std::cout << "constructor reclaimer_ibr_hp helping=" << this->shouldHelp() << std::endl;
         num_process = numProcesses;
-        empty_freq = 32000;//100; //30; // 32K gives best gains for AF version. larger or lower doesn't make a much difference.
+        empty_freq = get_int_env("empty_freq", 32000);//100; //30; // 32K gives best gains for AF version. larger or lower doesn't make a much difference.
         slotsPerThread = 3;
 
         slots = new paddedAtomic< T* >[num_process * slotsPerThread];
