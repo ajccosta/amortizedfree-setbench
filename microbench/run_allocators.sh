@@ -1,3 +1,4 @@
+#!/bin/bash
 alloc_dir=lib/allocators
 
 if [ ! -d "$alloc_dir" ]; then 
@@ -5,14 +6,13 @@ if [ ! -d "$alloc_dir" ]; then
 fi
 
 allocators="deqalloc mimalloc jemalloc"
-runs=3
-update_percs="100"
+runs=5
+update_percs="0 5 50 90 100"
 trackers="2geibr 2geibr_df debra debra_df he he_df ibr_hp ibr_hp_df ibr_rcu ibr_rcu_df nbr nbr_df nbrplus nbrplus_df qsbr qsbr_df token4 wfe wfe_df"
 #different data structures will require different sizes"
-rideables_sizes="guerraoui_ext_bst_ticket:200000 brown_ext_abtree_lf:200000 hm_hashtable:200000 hmlist:2000"
-
-trackers="debra"
-rideables_sizes="guerraoui_ext_bst_ticket:200000 brown_ext_abtree_lf:200000"
+rideables_sizes="guerraoui_ext_bst_ticket:5000 brown_ext_abtree_lf:5000 hm_hashtable:5000 hmlist:500"
+#rideables_sizes="guerraoui_ext_bst_ticket:200000 brown_ext_abtree_lf:200000 hm_hashtable:200000 hmlist:2000"
+#rideables_sizes="guerraoui_ext_bst_ticket:20000000 brown_ext_abtree_lf:20000000 hm_hashtable:20000000 hmlist:10000"
 
 fmt="%-12s %-10s %-10s %-25s %-10s %-6s %s"
 printf "$fmt\n" "allocator" "update%" "scheme" "ds" "key_size" "numa" "results"
@@ -38,7 +38,7 @@ for rideable_size in $(echo "$rideables_sizes"); do
             res=$(LD_PRELOAD=${alloc_dir}/lib${allocator}.so \
             /usr/bin/time -f "%M KiloBytes /usr/bin/time output" $numa_suffix \
             ./bin/ubench_${rideable}.alloc_new.reclaim_${tracker}.pool_none.out \
-            -nwork $(nproc) -nprefill 16 -i $update_half -d $update_half -rq 0 -rqsize 1 -k \
+            -nwork $(nproc) -nprefill $(nproc) -i $update_half -d $update_half -rq 0 -rqsize 1 -k \
             $size -nrq 0 -t 5000 2>&1)
             tp=$(echo -e "$res" | grep "total throughput" | tr -s ' ' | cut -d' ' -f4)
             tp_avg=$(python -c "print($tp_avg+($tp/$runs))")
