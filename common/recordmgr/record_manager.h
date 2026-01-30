@@ -77,6 +77,10 @@ public:
         check_duplicates<First, Rest...>(); // check if first is in {rest...}
     }
     ~RecordManagerSet() {
+        if (const char* env = std::getenv("NO_DESTRUCT")) { // skip destructing objects
+            std::cout<<"recordmanager skipping object destruction"<<std::endl;
+            return; 
+        }
         std::cout<<"recordmanager set destructor started for object type "<<typeid(First).name()<<std::endl;
         delete mgr;
         std::cout<<"recordmanager set destructor finished for object type "<<typeid(First).name()<<std::endl;

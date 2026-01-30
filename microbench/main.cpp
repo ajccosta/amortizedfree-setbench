@@ -1074,7 +1074,8 @@ void printOutput(auto g) {
     // free ds
 #if !defined NO_CLEANUP_AFTER_WORKLOAD
     std::cout<<"begin delete ds..."<<std::endl;
-    if (MAXKEY > 10000000) {
+    const char* env = std::getenv("NO_DESTRUCT");
+    if (MAXKEY > 10000000 || env != nullptr) {
         std::cout<<"    SKIPPING deletion of data structure to save time! (because key range is so large)"<<std::endl;
     } else {
         delete g->dsAdapter;
