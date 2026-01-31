@@ -4,6 +4,7 @@ import os
 import re
 from collections import defaultdict
 import matplotlib.pyplot as plt
+import csv
 
 # Target symbols
 MIMALLOC_FUNC = "mi_free_block_delayed_mt"
@@ -36,50 +37,56 @@ def extract_allocator_ds_smr(filename):
     """
     From: perf_allocator_ds:size_smr_update%_1.data.txt
     Extract:
-      allocator, ds, smr
+      allocator, ds, smr (including optional _df suffix)
     """
     base = os.path.basename(filename)
-    m = re.match(r"perf_([^_]+)_([^:]+):[^_]+_([^_]+)_", base)
+    m = re.match(r"perf_([^_]+)_([^:]+):[^_]+_([^_]+(?:_df)?)_", base)
     if not m:
         raise ValueError(f"Filename does not match expected format: {filename}")
     allocator, ds, smr = m.group(1), m.group(2), m.group(3)
     return allocator, ds, smr
 
-def infer_allocator_family(allocator_name):
-    """
-    Treat *_numa as a separate allocator.
-    """
-    if allocator_name.endswith("_numa"):
-        return allocator_name
-    return allocator_name
-
 def main(files):
     # allocator_family -> list of (label, value)
     grouped = defaultdict(list)
+    csv_rows = []
 
     for path in files:
         data = parse_file(path)
         allocator, ds, smr = extract_allocator_ds_smr(path)
-        allocator_family = infer_allocator_family(allocator)
 
         label = f"{ds}_{smr}"
 
         # Allocator-aware filtering
         if allocator.startswith("mi"):
-            # Mimalloc: only count mimalloc function
             value = data.get(MIMALLOC_FUNC, 0.0)
         elif allocator.startswith("je"):
-            # Jemalloc: sum only jemalloc-related locking funcs
             value = sum(data.get(f, 0.0) for f in JEMALLOC_FUNCS)
         else:
-            # Unknown allocator: skip
             continue
 
-        grouped[allocator_family].append((label, value))
+        grouped[allocator].append((label, value))
+        csv_rows.append({
+            "allocator": allocator,
+            "ds": ds,
+            "smr": smr,
+            "label": label,
+            "value": value
+        })
+
+    # Write CSV
+    csv_path = "allocator_data.csv"
+    with open(csv_path, "w", newline="") as csvfile:
+        fieldnames = ["allocator", "ds", "smr", "label", "value"]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in csv_rows:
+            writer.writerow(row)
+
+    print(f"Saved CSV: {csv_path}")
 
     # Generate one plot per allocator
     for allocator, entries in grouped.items():
-        # Sort for stable order
         entries.sort(key=lambda x: x[0])
         labels = [e[0] for e in entries]
         values = [e[1] for e in entries]
@@ -100,9 +107,10 @@ def main(files):
         plt.savefig(pdf_path)
         plt.close()
 
+        print(f"Saved: {png_path}, {pdf_path}")
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python3 perf_plot.py perf_*.data.txt")
         sys.exit(1)
     main(sys.argv[1:])
-
