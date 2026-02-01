@@ -87,15 +87,19 @@ def main(files):
 
     # Generate one plot per allocator
     for allocator, entries in grouped.items():
-        entries.sort(key=lambda x: x[0])
+        ## Sort by value for readability (optional; remove if undesired)
+        #entries.sort(key=lambda x: x[1], reverse=True)
+
         labels = [e[0] for e in entries]
         values = [e[1] for e in entries]
 
-        x = range(len(labels))
+        x = list(range(len(labels)))
+        width = 0.8  # wider bars, less gap
 
-        plt.figure()
-        plt.bar(x, values)
-        plt.xticks(x, labels, rotation=45, ha="right", fontsize=6)
+        plt.figure(figsize=(max(8, len(labels) * 0.6), 5))
+        plt.bar(x, values, width=width, align="center")
+
+        plt.xticks(x, labels, rotation=60, ha="right")
         plt.ylabel("Percentage of runtime")
         plt.title(f"Allocator: {allocator}")
         plt.tight_layout()
@@ -108,6 +112,8 @@ def main(files):
         plt.close()
 
         print(f"Saved: {png_path}, {pdf_path}")
+
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
