@@ -79,4 +79,13 @@ popd
 cp $(readlink -f tcmalloc/bazel-bin/tcmalloc/libtcmalloc.so) libtcmalloc.so
 rm -rf tcmalloc
 
+git clone https://github.com/microsoft/snmalloc
+mkdir -p snmalloc/build
+pushd snmalloc/build
+env CXX=clang++ cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release
+ninja libsnmallocshim.so libsnmallocshim-checks.so
+popd
+mv snmalloc/build/libsnmallocshim.so libsnmalloc.so
+rm -rf snmalloc
+
 popd

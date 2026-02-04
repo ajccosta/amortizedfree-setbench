@@ -6,19 +6,19 @@ if [ ! -d "$alloc_dir" ]; then
 fi
 
 #:numa means the allocator will be run with numactl -i all
-allocators="deqalloc mimalloc jemalloc:numa"
-runs=5
-update_percs="0 5 50 90 100"
+allocators="deqalloc mimalloc jemalloc:numa snmalloc hoard hoard:numa tcmalloc tcmalloc:numa mesh mesh:numa"
+runs=3
+update_percs="1 5 50 90 100"
 trackers="2geibr 2geibr_df debra debra_df he he_df ibr_hp ibr_hp_df ibr_rcu ibr_rcu_df nbr nbr_df nbrplus nbrplus_df qsbr qsbr_df token4 wfe wfe_df"
 #different data structures will require different sizes"
 #small-sized data structures
-#rideables_sizes="guerraoui_ext_bst_ticket:5000 brown_ext_abtree_lf:5000 hm_hashtable:5000 hmlist:500"
+rideables_sizes="guerraoui_ext_bst_ticket:5000 brown_ext_abtree_lf:5000 hm_hashtable:5000 hmlist:500"
 #medium-sized data structures
-#rideables_sizes="guerraoui_ext_bst_ticket:200000 brown_ext_abtree_lf:200000 hm_hashtable:200000 hmlist:2000"
+rideables_sizes+=" guerraoui_ext_bst_ticket:200000 brown_ext_abtree_lf:200000 hm_hashtable:200000 hmlist:2000"
 #medium-large-sized data structures
-#rideables_sizes="guerraoui_ext_bst_ticket:20000000 brown_ext_abtree_lf:20000000 hm_hashtable:20000000 hmlist:10000"
+rideables_sizes+=" guerraoui_ext_bst_ticket:20000000 brown_ext_abtree_lf:20000000 hm_hashtable:2000000 hmlist:10000"
 #large-sized data structures
-rideables_sizes="guerraoui_ext_bst_ticket:200000000 brown_ext_abtree_lf:200000000 hm_hashtable:200000000 hmlist:100000"
+rideables_sizes+=" guerraoui_ext_bst_ticket:200000000 brown_ext_abtree_lf:200000000 hm_hashtable:20000000 hmlist:10000"
 
 fmt="%-12s %-10s %-10s %-25s %-10s %-6s %s"
 printf "$fmt\n" "allocator" "update%" "scheme" "ds" "key_size" "numa" "results"
