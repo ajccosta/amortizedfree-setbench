@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#build multiple allocators
+#instructions mostly taken from https://github.com/daanx/mimalloc-bench/blob/master/build-bench-env.sh
+
 mkdir -p lib/allocators
 pushd lib/allocators
 
@@ -79,6 +82,7 @@ popd
 cp $(readlink -f tcmalloc/bazel-bin/tcmalloc/libtcmalloc.so) libtcmalloc.so
 rm -rf tcmalloc
 
+#compile snmalloc
 git clone https://github.com/microsoft/snmalloc
 mkdir -p snmalloc/build
 pushd snmalloc/build
@@ -87,5 +91,44 @@ ninja libsnmallocshim.so libsnmallocshim-checks.so
 popd
 mv snmalloc/build/libsnmallocshim.so libsnmalloc.so
 rm -rf snmalloc
+
+#compile lockfree 
+git clone https://github.com/Begun/lockfree-malloc
+pushd lockfree-malloc
+make -j $procs liblite-malloc-shared.so
+popd
+cp $(readlink -f lockfree-malloc/liblite-malloc-shared.so) liblockfree.so
+rm -rf lockfree-malloc
+
+#compile scalloc
+git clone https://github.com/cksystemsgroup/scalloc
+pushd scalloc
+./tools/make_deps.sh
+./tools/gyp --depth=. scalloc.gyp
+BUILDTYPE=Release make -j $procs
+popd
+cp scalloc/out/Release/lib.target/libscalloc.so .
+rm -rf scalloc
+
+#compile rpmalloc
+git clone https://github.com/mjansson/rpmalloc
+pushd rpmalloc
+CC=clang-16 CXX=clang++-16 python3 configure.py
+# fix build using clang-16
+# see https://github.com/mjansson/rpmalloc/issues/316
+sed -i 's/-Werror//' build.ninja
+ninja
+popd
+cp rpmalloc/build/ninja/linux/release/x86-64/rpmalloc-cccf0ca/librpmalloc.so .
+rm -rf rpmalloc
+
+#compile tbbmalloc
+git clone https://github.com/oneapi-src/oneTBB
+pushd oneTBB
+cmake -DCMAKE_BUILD_TYPE=Release -DTBB_BUILD=OFF -DTBB_TEST=OFF -DTBB_OUTPUT_DIR_BASE=bench .
+make -j $procs
+popd
+cp $(readlink -f oneTBB/bench_release/libtbbmalloc.so) ./libtbbmalloc.so
+rm -rf oneTBB
 
 popd
