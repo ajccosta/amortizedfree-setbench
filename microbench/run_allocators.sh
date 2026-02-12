@@ -1,8 +1,15 @@
 #!/bin/bash
 alloc_dir=lib/allocators
 
+script_dir=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
+pushd $script_dir
+
 if [ ! -d "$alloc_dir" ]; then 
-  ./build.sh
+  ./build_allocators.sh
+fi
+
+if [ -z "$( ls -A ./bin )" ]; then
+  ./compile.sh
 fi
 
 #:numa means the allocator will be run with numactl -i all
@@ -11,7 +18,7 @@ fi
 # It is highly machine dependent, and some allocators have no clear
 # best configuration, as the best changes from data structure to data structure.
 allocators="deqalloc mimalloc jemalloc:numa:df snmalloc hoard:numa tcmalloc::df tbbmalloc::df lockfree:numa:df rpmalloc::df"
-runs=3
+runs=5
 update_percs="1 5 50 90 100"
 trackers="2geibr debra he ibr_hp ibr_rcu nbr nbrplus qsbr wfe"
 #different data structures will require different sizes"
@@ -32,7 +39,7 @@ for rideable_size in $(echo "$rideables_sizes"); do
       for allocator_wnuma in $(echo "$allocators"); do
         rideable=$(echo $rideable_size | cut -d: -f1)
         size=$(echo $rideable_size | cut -d: -f2)
-        update_half=$(python -c "print(int($update_perc/2))")
+        update_half=$(python -c "print(round($update_perc/2,2))")
         #remove :numa from allocator
         allocator=$(echo $allocator_wnuma | cut -d: -f1)
         numa_suffix=$(echo $allocator_wnuma | cut -d: -f2)
@@ -49,10 +56,10 @@ for rideable_size in $(echo "$rideables_sizes"); do
         else
           df_suffix=""
         fi
-        if [[ "${rideable}" == "brown_ext_abtree_lf" && "${tracker}" == *"nbr"* ]]; then
-          #brown_ext_abtree_lf with nbr or nbr_plus segfaults
-          continue
-        fi
+        #if [[ "${rideable}" == "brown_ext_abtree_lf" && "${tracker}" == *"nbr"* ]]; then
+        #  #brown_ext_abtree_lf with nbr or nbr_plus segfaults
+        #  continue
+        #fi
         #decide whether to use numactl or not
         printf "$fmt" "$allocator" "$update_perc" "${tracker}${df_suffix}" "$rideable" "$size" "$use_numa" "[ "
         tp_avg=0
@@ -76,3 +83,5 @@ for rideable_size in $(echo "$rideables_sizes"); do
     done
   done
 done
+
+popd
