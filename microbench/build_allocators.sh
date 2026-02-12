@@ -131,4 +131,15 @@ popd
 cp $(readlink -f oneTBB/bench_release/libtbbmalloc.so) ./libtbbmalloc.so
 rm -rf oneTBB
 
+#compile mimalloc-batchit
+#https://www.microsoft.com/en-us/research/wp-content/uploads/2024/05/preprint_batchit.pdf
+git clone https://github.com/mjp41/mimalloc.git
+pushd mimalloc
+git checkout dev-remote-cache
+cmake -B out/release
+cmake --build out/release --parallel 8
+popd
+cp $(readlink -f mimalloc/out/release/libmimalloc.so) libmimalloc-batchit.so
+rm -rf mimalloc
+
 popd

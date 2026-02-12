@@ -17,7 +17,7 @@ fi
 # We chose which allocator uses what based on experimental results.
 # It is highly machine dependent, and some allocators have no clear
 # best configuration, as the best changes from data structure to data structure.
-allocators="deqalloc mimalloc jemalloc:numa:df snmalloc hoard:numa tcmalloc::df tbbmalloc::df lockfree:numa:df rpmalloc::df"
+allocators="deqalloc mimalloc mimalloc-batchit jemalloc:numa:df snmalloc hoard:numa tcmalloc::df tbbmalloc::df lockfree:numa:df rpmalloc::df"
 runs=5
 update_percs="1 5 50 90 100"
 trackers="2geibr debra he ibr_hp ibr_rcu nbr nbrplus qsbr wfe"
@@ -31,7 +31,7 @@ rideables_sizes+=" guerraoui_ext_bst_ticket:20000000 brown_ext_abtree_lf:2000000
 #large-sized data structures
 rideables_sizes+=" guerraoui_ext_bst_ticket:200000000 brown_ext_abtree_lf:200000000 hm_hashtable:20000000 hmlist:10000"
 
-fmt="%-12s %-10s %-10s %-25s %-10s %-6s %s"
+fmt="%-17s %-10s %-10s %-25s %-10s %-6s %s"
 printf "$fmt\n" "allocator" "update%" "scheme" "ds" "key_size" "numa" "results"
 for rideable_size in $(echo "$rideables_sizes"); do
   for tracker in $(echo "$trackers"); do
