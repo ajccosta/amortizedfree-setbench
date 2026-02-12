@@ -44,17 +44,17 @@ cp $(readlink -f Hoard/src/libhoard.so) libhoard.so
 rm -rf Hoard
 
 #compile deqalloc
-#git clone https://github.com/ajccosta/deqalloc
-#pushd deqalloc/examples/deqalloc
-#git checkout master
-#mkdir -p build
-#pushd build
-#cmake ..
-#make -j
-#popd
-#popd
-#cp $(readlink -f deqalloc/examples/deqalloc/build/libdeqalloc.so) libdeqalloc.so
-#rm -rf deqalloc
+git clone https://github.com/ajccosta/deqalloc
+pushd deqalloc/examples/deqalloc
+git checkout master
+mkdir -p build
+pushd build
+cmake ..
+make -j
+popd
+popd
+cp $(readlink -f deqalloc/examples/deqalloc/build/libdeqalloc.so) libdeqalloc.so
+rm -rf deqalloc
 
 #compile scalloc
 git clone https://github.com/ajccosta/scalloc.git
