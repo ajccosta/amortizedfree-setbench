@@ -11,7 +11,11 @@
 static void acquireLock(volatile int *lock) {
     while (1) {
         if (*lock) {
+#if defined(__x86_64__) || defined(__i386__)
             __asm__ __volatile__("pause;");
+#elif defined(__aarch64__)
+            __asm__ __volatile__("yield");
+#endif
             continue;
         }
         if (__sync_bool_compare_and_swap(lock, false, true)) {
