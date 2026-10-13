@@ -251,6 +251,7 @@ retry:
         curr = root;
         do {
             curr_ver = curr->lock.to_uint64;
+            TK_ACQUIRE_FENCE;
 
             pred = curr;
             pred_ver = curr_ver;
@@ -303,8 +304,10 @@ retry:
         }
 
         if (right) {
+            TK_RELEASE_FENCE;
             pred->right = nr;
         } else {
+            TK_RELEASE_FENCE;
             pred->left = nr;
         }
 
@@ -331,6 +334,7 @@ sval_t ticketOOI<skey_t, sval_t, RecMgr>::bst_tk_delete(const int tid, skey_t ke
 
         do {
             curr_ver = curr->lock.to_uint64;
+            TK_ACQUIRE_FENCE;
 
             ppred = pred;
             ppred_ver = pred_ver;
