@@ -253,6 +253,7 @@ retry:
         curr = root;
         do {
             curr_ver = curr->lock.to_uint64;
+            TK_ACQUIRE_FENCE;
 
             pred = curr;
             pred_ver = curr_ver;
@@ -304,8 +305,10 @@ retry:
         }
 
         if (right) {
+            TK_RELEASE_FENCE;
             pred->right = nr;
         } else {
+            TK_RELEASE_FENCE;
             pred->left = nr;
         }
 
@@ -340,6 +343,7 @@ retry:
 
         do {
             curr_ver = curr->lock.to_uint64;
+            TK_ACQUIRE_FENCE;
 
             ppred = pred;
             ppred_ver = pred_ver;

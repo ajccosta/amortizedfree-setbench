@@ -330,6 +330,7 @@ retry:
 #endif        
         do {
             curr_ver = curr->lock.to_uint64;
+            TK_ACQUIRE_FENCE;
 
             pred = curr;
             recmgr->transfer(tid, 1, 0);
@@ -465,6 +466,7 @@ sval_t ticketDAOIRUSLON<skey_t, sval_t, RecMgr>::bst_tk_delete(const int tid, sk
 
         do {
             curr_ver = curr->lock.to_uint64;
+            TK_ACQUIRE_FENCE;
 
             ppred = pred;
             recmgr->transfer(tid, 1, 0);

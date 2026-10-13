@@ -333,6 +333,7 @@ retryhp:
         do {
     
             curr_ver = curr->lock.to_uint64;
+            TK_ACQUIRE_FENCE;
 
             if(pred) recmgr->unprotect(tid, pred);
 
@@ -381,8 +382,10 @@ retryhp:
         }
 
         if (right) {
+            TK_RELEASE_FENCE;
             pred->right = nr;
         } else {
+            TK_RELEASE_FENCE;
             pred->left = nr;
         }
 
@@ -413,6 +416,7 @@ retryhp:
 
         do {
             curr_ver = curr->lock.to_uint64;
+            TK_ACQUIRE_FENCE;
 
             if (ppred) recmgr->unprotect(tid, ppred);
 

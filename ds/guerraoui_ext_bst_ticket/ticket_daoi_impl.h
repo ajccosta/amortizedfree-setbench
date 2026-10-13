@@ -279,6 +279,7 @@ retry:
         
         do {
             curr_ver = curr->lock.to_uint64;
+            TK_ACQUIRE_FENCE;
 
             pred = curr;
             pred_ver = curr_ver;
@@ -374,6 +375,7 @@ sval_t ticketDAOI<skey_t, sval_t, RecMgr>::bst_tk_delete(const int tid, skey_t k
         // #endif
         do {
             curr_ver = curr->lock.to_uint64;
+            TK_ACQUIRE_FENCE;
 
             ppred = pred;
             ppred_ver = pred_ver;

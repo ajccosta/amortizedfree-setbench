@@ -13,6 +13,20 @@
 #include <csignal>
 #include "errors.h"
 #include "random_fnv1a.h"
+
+// x86 is TSO, so the version locks only need compiler barriers there. Weakly
+// ordered CPUs (aarch64) need real fences: unlock must publish the writes made
+// under the lock, a version read must come before the reads it validates, and a
+// new node must be initialised before it is linked in.
+#if defined(__x86_64__) || defined(__i386__)
+#define COMPILER_BARRIER asm volatile ("" ::: "memory")
+#define TK_ACQUIRE_FENCE
+#define TK_RELEASE_FENCE
+#else
+#define COMPILER_BARRIER __atomic_thread_fence(__ATOMIC_SEQ_CST)
+#define TK_ACQUIRE_FENCE __atomic_thread_fence(__ATOMIC_ACQUIRE)
+#define TK_RELEASE_FENCE __atomic_thread_fence(__ATOMIC_RELEASE)
+#endif
 #ifdef USE_TREE_STATS
 #   define TREE_STATS_BYTES_AT_DEPTH
 #   include "tree_stats.h"

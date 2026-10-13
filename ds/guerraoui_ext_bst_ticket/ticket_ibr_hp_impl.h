@@ -267,6 +267,7 @@ retryhp:
         curr = recmgr->read (tid, (idx++%2), root); 
         do {
             curr_ver = curr->lock.to_uint64;
+            TK_ACQUIRE_FENCE;
 
             pred = curr;
             pred_ver = curr_ver;
@@ -312,8 +313,10 @@ retryhp:
         }
 
         if (right) {
+            TK_RELEASE_FENCE;
             pred->right = nr;
         } else {
+            TK_RELEASE_FENCE;
             pred->left = nr;
         }
 
@@ -340,6 +343,7 @@ retryhp:
         curr = recmgr->read (tid, (idx++%2), root);
         do {
             curr_ver = curr->lock.to_uint64;
+            TK_ACQUIRE_FENCE;
 
             ppred = pred;
             ppred_ver = pred_ver;

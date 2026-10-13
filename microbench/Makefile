@@ -65,7 +65,14 @@ FLAGS += -DMAX_THREADS_POW2=512
 FLAGS += -DCPU_FREQ_GHZ=2.1 #$(shell ./experiments/get_cpu_ghz.sh)
 # FLAGS += -DCPU_FREQ_GHZ=$(shell ./experiments/get_cpu_ghz.sh)
 FLAGS += -DMEMORY_STATS=if\(1\) -DMEMORY_STATS2=if\(0\)
-FLAGS += -std=c++17 -mcx16 -fconcepts # to avoid auto in parameter declaration warning #-gdwarf # AJNOTE: used c++17 for exp1-2
+FLAGS += -std=c++17 -fconcepts # to avoid auto in parameter declaration warning #-gdwarf # AJNOTE: used c++17 for exp1-2
+# 16-byte CAS: -mcx16 on x86; elsewhere (e.g. aarch64) it goes through libatomic
+ifeq ($(shell uname -m),x86_64)
+FLAGS += -mcx16
+LDFLAGS_ARCH = -mrtm
+else
+LDFLAGS_ARCH = -latomic
+endif
 # FLAGS += -DLLISTDS
 FLAGS += -fno-omit-frame-pointer
 # FLAGS += -DCALL_DEBUG_GC
@@ -97,7 +104,7 @@ LDFLAGS += -L../lib
 LDFLAGS += -I./ -I../ `find ../common -type d | sed s/^/-I/`
 LDFLAGS += -lpthread
 LDFLAGS += -ldl
-LDFLAGS += -mrtm
+LDFLAGS += $(LDFLAGS_ARCH)
 
 bin_dir=bin
 dir_guard:
