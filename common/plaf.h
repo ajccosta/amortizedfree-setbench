@@ -15,8 +15,15 @@
     #define LOGICAL_PROCESSORS MAX_THREADS_POW2
 #endif
 
+// x86 is TSO, so ordering reads and writes only needs a compiler barrier.
+// Weakly ordered CPUs (aarch64) need a real fence for the same guarantee
+// (e.g., LLX/SCX and the descriptor reuse in descriptors_impl.h rely on it).
 #ifndef SOFTWARE_BARRIER
-#   define SOFTWARE_BARRIER asm volatile("": : :"memory")
+#   if defined(__x86_64__) || defined(__i386__)
+#       define SOFTWARE_BARRIER asm volatile("": : :"memory")
+#   else
+#       define SOFTWARE_BARRIER __atomic_thread_fence(__ATOMIC_SEQ_CST)
+#   endif
 #endif
 
 // the following definition is only used to pad data to avoid false sharing.
